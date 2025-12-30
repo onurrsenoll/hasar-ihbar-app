@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MR Hasar Danışmanlık - İhbar Föyü</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2C5F8D 0%, #1a3d5c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            color: #B8D4E8;
+        }
+        
+        .tab-container {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            background: #f8f9fa;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #2C5F8D;
+            border-bottom: 3px solid #2C5F8D;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-content {
+            padding: 30px 40px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2C5F8D;
+        }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #2C5F8D;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        
+        input[type="text"], input[type="date"], input[type="number"], textarea, select {
+            padding: 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2C5F8D;
+            box-shadow: 0 0 0 3px rgba(44, 95, 141, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 11px;
+        }
+        
+        /* PARÇA LİSTESİ STYLES */
+        .parts-input-section {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 2px solid #2C5F8D;
+        }
+        
+        .parts-input-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.2fr 1.2fr 0.8fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .parts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .parts-table th {
+            background: #2C5F8D;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .parts-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13px;
+        }
+        
+        .parts-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .parts-table .actions {
+            text-align: center;
+        }
+        
+        .delete-btn {
+            background: #DC3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+        
+        .total-section {
+            background: #FFF3CD;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 2px solid #FFC107;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .total-row.grand {
+            font-size: 20px;
+            color: #2C5F8D;
+            padding-top: 10px;
+            border-top: 2px solid #2C5F8D;
+        }
+        
+        /* MODAL STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #3498DB 0%, #2874A6 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .close-modal {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #3498DB;
+            outline: none;
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+        }
+        
+        .files-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .file-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .file-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-title {
+            font-weight: bold;
+            color: #2C5F8D;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+        
+        .file-details {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-load {
+            background: #3498DB;
+            color: white;
+        }
+        
+        .btn-load:hover {
+            background: #2874A6;
+        }
+        
+        .btn-delete {
+            background: #E74C3C;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #C0392B;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .button-container {
+            padding: 30px 40px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            border-top: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #28A745 0%, #20873a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #DC3545 0%, #c82333 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.6);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17A2B8 0%, #138496 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(23, 162, 184, 0.6);
+        }
+        
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row, .parts-input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* YAZDIR / PDF İÇİN STILLER */
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+            
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            
+            /* YAZDIRIRKEN GİZLE */
+            .tab-container, 
+            .button-container, 
+            .parts-input-section,
+            div[style*="background: #FFF3CD"],
+            #quick-excel-btn,
+            button[onclick*="excelImport"],
+            #parca-tab .form-content > div:nth-child(2) {
+                display: none !important;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+                width: 100%;
+            }
+            
+            .header {
+                background: white !important;
+                color: #2C5F8D !important;
+                border-bottom: 3px solid #2C5F8D;
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .header h1 {
+                font-size: 18px;
+                color: #2C5F8D;
+            }
+            
+            .header p {
+                font-size: 11px;
+                color: #666;
+            }
+            
+            .form-content {
+                max-height: none !important;
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+            
+            .tab-content {
+                display: block !important;
+            }
+            
+            /* İHBAR FÖYÜ - Tek sayfaya sığdır */
+            #dosya-tab .section {
+                page-break-inside: avoid;
+                margin-bottom: 12px;
+                padding: 10px 12px;
+                background: #f8f9fa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            #dosya-tab .section-title {
+                font-size: 11px;
+                margin-bottom: 8px;
+                color: #2C5F8D !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            #dosya-tab .form-row {
+                margin-bottom: 6px;
+            }
+            
+            #dosya-tab label {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+            
+            #dosya-tab input, #dosya-tab textarea, #dosya-tab select {
+                font-size: 10px;
+                padding: 4px 6px;
+                border: 1px solid #ccc;
+            }
+            
+            #dosya-tab textarea {
+                min-height: 40px;
+            }
+            
+            #dosya-tab .checkbox-group {
+                gap: 4px;
+                margin-top: 6px;
+            }
+            
+            #dosya-tab .checkbox-item {
+                gap: 4px;
+            }
+            
+            #dosya-tab .checkbox-item label {
+                font-size: 9px;
+            }
+            
+            /* PARÇA LİSTESİ */
+            #parca-tab {
+                page-break-before: always;
+            }
+            
+            /* Yazdırırken başlığı göster */
+            #print-parts-header {
+                display: block !important;
+            }
+            
+            .parts-table {
+                page-break-inside: auto;
+                width: 100%;
+                font-size: 9px;
+            }
+            
+            .parts-table th {
+                background: #2C5F8D !important;
+                color: white !important;
+                padding: 6px 4px;
+                font-size: 9px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .parts-table td {
+                padding: 5px 4px;
+                border-bottom: 1px solid #dee2e6;
+                font-size: 9px;
+            }
+            
+            .parts-table tr {
+                page-break-inside: avoid;
+            }
+            
+            .parts-table .actions {
+                display: none;
+            }
+            
+            .total-section {
+                background: #FFF3CD !important;
+                padding: 12px;
+                border: 2px solid #FFC107;
+                margin-top: 12px;
+                page-break-inside: avoid;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .total-row {
+                font-size: 11px;
+                margin-bottom: 6px;
+            }
+            
+            .total-row.grand {
+                font-size: 13px;
+                padding-top: 8px;
+                border-top: 2px solid #2C5F8D;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MR HASAR DANIŞMANLIK VE FİLO YÖNETİMİ</h1>
+            <p>İhbar Föyü ve Parça Listesi Yönetim Sistemi</p>
+        </div>
+        
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('dosya')">📋 İhbar Föyü</button>
+            <button class="tab" onclick="switchTab('parca')">🔧 Parça Listesi</button>
+        </div>
+        
+        <!-- DOSYA BİLGİLERİ TAB -->
+        <div id="dosya-tab" class="tab-content active">
+            <div class="form-content">
+                <!-- ARAÇ VE SAHİP BİLGİLERİ -->
+                <div class="section">
+                    <div class="section-title">🚗 ARAÇ VE SAHİP BİLGİLERİ</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Plaka:</label>
+                            <input type="text" id="plaka">
+                        </div>
+                        <div class="form-group">
+                            <label>Marka / Model:</label>
+                            <input type="text" id="marka">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Şasi No:</label>
+                            <input type="text" id="sasi">
+                        </div>
+                        <div class="form-group">
+                            <label>Kilometre:</label>
+                            <input type="text" id="kilometre">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ruhsat Sahibi Ad Soyad:</label>
+                            <input type="text" id="sahip_ad">
+                        </div>
+                        <div class="form-group">
+                            <label>TC Kimlik No / Telefon:</label>
+                            <input type="text" id="sahip_tel">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>IBAN:</label>
+                            <input type="text" id="iban">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- DOSYA BİLGİLERİ -->
+                <div class="section">
+                    <div class="section-title">📋 DOSYA BİLGİLERİ</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Sigorta Şirketi:</label>
+                            <input type="text" id="sigorta">
+                        </div>
+                        <div class="form-group">
+                            <label>Dosya No:</label>
+                            <input type="text" id="dosya_no">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dosya Türü:</label>
+                            <select id="dosya_turu">
+                                <option value="KASKO">KASKO</option>
+                                <option value="TRAFİK">TRAFİK</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Poliçe No:</label>
+                            <input type="text" id="police_no">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EKSPER VE SERVİS BİLGİLERİ -->
+                <div class="section">
+                    <div class="section-title">🔍 EKSPER VE SERVİS BİLGİLERİ</div>
+                    
+                    <!-- EKSPER -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Eksper Ofisi & Adı:</label>
+                            <input type="text" id="eksper_adi">
+                        </div>
+                        <div class="form-group">
+                            <label>İletişim Bilgisi:</label>
+                            <input type="text" id="eksper_iletisim" placeholder="Telefon / E-posta">
+                        </div>
+                    </div>
+                    
+                    <!-- İNCE ÇİZGİ AYIRICI -->
+                    <div style="border-top: 1px solid #dee2e6; margin: 20px 0;"></div>
+                    
+                    <!-- SERVİS -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Servis Adı:</label>
+                            <input type="text" id="servis_adi">
+                        </div>
+                        <div class="form-group">
+                            <label>Yetkili Adı Soyadı:</label>
+                            <input type="text" id="servis_yetkili" placeholder="Yetkili kişi">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Servis İletişim ve Adres:</label>
+                            <input type="text" id="servis_tel">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KAZA BİLGİLERİ -->
+                <div class="section">
+                    <div class="section-title">⚠️ KAZA BİLGİLERİ</div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Kaza Yeri:</label>
+                            <input type="text" id="kaza_yeri">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Kaza Açıklaması:</label>
+                            <textarea id="kaza_aciklama" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EVRAK KONTROL -->
+                <div class="section">
+                    <div class="section-title">✓ EVRAK KONTROL</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_ehliyet">
+                            <label for="evrak_ehliyet">Ehliyet</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_ruhsat">
+                            <label for="evrak_ruhsat">Ruhsat</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_police">
+                            <label for="evrak_police">Poliçe</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_ktt">
+                            <label for="evrak_ktt">KTT</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_iban">
+                            <label for="evrak_iban">IBAN</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_kilometre">
+                            <label for="evrak_kilometre">Kilometre</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_olay">
+                            <label for="evrak_olay">Olay Yeri Foto</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_hasar">
+                            <label for="evrak_hasar">Hasar Foto</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_parca">
+                            <label for="evrak_parca">Parça Listesi</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_ekspertiz">
+                            <label for="evrak_ekspertiz">Ekspertiz Raporu</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_fatura">
+                            <label for="evrak_fatura">Onarım Faturası</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="evrak_vekaletname">
+                            <label for="evrak_vekaletname">Vekaletname</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- İŞLEM DURUMU -->
+                <div class="section">
+                    <div class="section-title">⚡ İŞLEM DURUMU</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_ihbar">
+                            <label for="islem_ihbar">İhbar Yapıldı</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_evrak">
+                            <label for="islem_evrak">Evrak Gönderildi</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_ekspertiz">
+                            <label for="islem_ekspertiz">Ekspertiz Yapıldı</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_basladi">
+                            <label for="islem_basladi">Onarım Başladı</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_bitti">
+                            <label for="islem_bitti">Onarım Bitti</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_odeme">
+                            <label for="islem_odeme">Ödeme Alındı</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_deger">
+                            <label for="islem_deger">Değer Kaybı Açıldı</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="islem_kapandi">
+                            <label for="islem_kapandi">Dosya Kapatıldı</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NOTLAR -->
+                <div class="section">
+                    <div class="section-title">📝 NOTLAR</div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <textarea id="notlar" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PARÇA LİSTESİ TAB -->
+        <div id="parca-tab" class="tab-content">
+            <div class="form-content">
+                <!-- SADECE YAZDIRMADA GÖRÜNEN BAŞLIK -->
+                <div id="print-parts-header" style="display: none; text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2C5F8D;">
+                    <h3 style="color: #2C5F8D; font-size: 16px; margin: 0;">HASAR PARÇA LİSTESİ</h3>
+                    <p id="print-plaka-info" style="color: #666; font-size: 12px; margin: 5px 0 0 0;"></p>
+                </div>
+                
+                <!-- EXCEL İÇE AKTAR BÖLÜMÜ -->
+                <div style="background: #FFF3CD; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px solid #FFC107;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 15px; color: #856404;">📂 EXCEL'DEN PARÇA LİSTESİ YÜKLEYİN</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <input type="file" id="excelImport" accept=".xlsx,.xls" onchange="importFromExcel()" style="padding: 10px; border: 2px solid #FFC107; border-radius: 8px; background: white; flex: 1; min-width: 250px;">
+                        <button class="btn btn-info btn-small" onclick="downloadTemplate()">📄 Şablon İndir</button>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #856404;">
+                        ℹ️ Servisin gönderdiği Excel dosyasını seçin - otomatik olarak tabloya eklenecek. Veya şablon indirip doldurun.
+                    </div>
+                </div>
+                
+                <!-- AI TARAMA BÖLÜMÜ -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 16px; color: white;">🤖 AI İLE OTOMATIK TARAMA</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <!-- RUHSAT YÜKLE -->
+                        <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3);">
+                            <div style="color: white; font-weight: 600; margin-bottom: 10px; font-size: 14px;">📸 RUHSAT YÜKLE</div>
+                            <input type="file" id="ruhsatInput" accept="image/*,.pdf" style="display: none;" onchange="handleRuhsatUpload(event)">
+                            <button onclick="document.getElementById('ruhsatInput').click()" style="width: 100%; padding: 12px; background: white; color: #667eea; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                📸 Ruhsat Seç
+                            </button>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 11px; margin-top: 8px; line-height: 1.4;">
+                                Araç ruhsatını yükleyin<br>Marka, model, plaka otomatik doldurulur
+                            </div>
+                        </div>
+                        
+                        <!-- PARÇA LİSTESİ YÜKLE -->
+                        <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3);">
+                            <div style="color: white; font-weight: 600; margin-bottom: 10px; font-size: 14px;">📋 PARÇA LİSTESİ YÜKLE</div>
+                            <input type="file" id="parcaListesiInput" accept="image/*,.pdf" style="display: none;" onchange="handleParcaListesiUpload(event)">
+                            <button onclick="document.getElementById('parcaListesiInput').click()" style="width: 100%; padding: 12px; background: white; color: #764ba2; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                📋 Parça Listesi Seç
+                            </button>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 11px; margin-top: 8px; line-height: 1.4;">
+                                El yazısı/fotoğraf/PDF<br>Parçalar otomatik tanınır ve fiyatlandırılır
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; color: white; font-size: 12px;">
+                        ⚡ PC'de Chrome ile kullanın! Mobil tarayıcıda sorun olabilir.
+                    </div>
+                </div>
+                
+                <div class="parts-input-section">
+                    <div class="section-title">➕ YENİ PARÇA EKLE</div>
+                    <div class="parts-input-grid">
+                        <div class="form-group">
+                            <label>Parça Adı:</label>
+                            <input type="text" id="part_name" placeholder="Örn: Ön Far Komple LED">
+                        </div>
+                        <div class="form-group">
+                            <label>OEM Kod:</label>
+                            <input type="text" id="part_oem" placeholder="OEM Kodu">
+                        </div>
+                        <div class="form-group">
+                            <label>Orijinal Fiyat (TL):</label>
+                            <input type="number" id="part_original" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Miktar:</label>
+                            <input type="number" id="part_quantity" value="1" min="1">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-small" onclick="addPart()">➕ Parça Ekle</button>
+                </div>
+                
+                <!-- KDV CHECKBOX -->
+                <div style="background: #E8F5E9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #27AE60;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                        <input type="checkbox" id="kdvCheckbox" onchange="renderPartsTable()" style="width: 20px; height: 20px;">
+                        <span>💵 KDV (%20) DAHİL HESAPLA</span>
+                    </label>
+                    <p style="font-size: 11px; color: #666; margin: 8px 0 0 30px;">
+                        ℹ️ Fatura isteyen müşteriler için KDV dahil hesaplama yapılır
+                    </p>
+                </div>
+                
+                <!-- İŞÇİLİK BEDELİ -->
+                <div style="background: #FFF3CD; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FFC107;">
+                    <div style="font-weight: bold; font-size: 14px; color: #856404; margin-bottom: 10px;">
+                        🔧 İŞÇİLİK BEDELİ
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="iscilikBedeli" placeholder="İşçilik Bedeli (TL)" step="0.01" min="0" value="0" style="flex: 1; padding: 10px; border: 2px solid #FFC107; border-radius: 6px; font-size: 14px;" onchange="renderPartsTable()">
+                        <span style="font-size: 12px; color: #856404; white-space: nowrap;">
+                            ⚠️ İşçiliğe KDV eklenmez
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">📋 PARÇA LİSTESİ</div>
+                    <table class="parts-table" id="partsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">Sıra</th>
+                                <th style="width: 250px;">Parça Adı</th>
+                                <th style="width: 120px;">OEM Kod</th>
+                                <th style="width: 100px; text-align: right;">Orijinal<br>(TL)</th>
+                                <th style="width: 80px; text-align: right;">KDV<br>%20</th>
+                                <th style="width: 100px; text-align: right;">KDV Dahil<br>(TL)</th>
+                                <th style="width: 60px;">Miktar</th>
+                                <th style="width: 80px;">İşlem</th>
+                            </tr>
+                        </thead>
+                                <th>Miktar</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partsTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #999;">
+                                    Henüz parça eklenmedi. Yukarıdaki formu doldurup "Parça Ekle" butonuna tıklayın.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="total-section" id="totalSection" style="display: none;">
+                        <div class="total-row">
+                            <span>TOPLAM PARÇA (KDV Hariç):</span>
+                            <span id="totalParca">0 TL</span>
+                        </div>
+                        <div class="total-row" id="kdvRow" style="display: none;">
+                            <span>TOPLAM KDV (%20):</span>
+                            <span id="totalKDV">0 TL</span>
+                        </div>
+                        <div class="total-row" id="parcaKDVRow" style="display: none;">
+                            <span>PARÇA TOPLAMI (KDV Dahil):</span>
+                            <span id="totalParcaKDV">0 TL</span>
+                        </div>
+                        <div class="total-row" id="iscilikRow" style="display: none;">
+                            <span>İŞÇİLİK (KDV yok):</span>
+                            <span id="totalIscilik">0 TL</span>
+                        </div>
+                        <div class="total-row grand">
+                            <span>GENEL TOPLAM:</span>
+                            <span id="genelToplam">0 TL</span>
+                        </div>
+                    </div>
+                    
+                    <!-- HIZLI EXCEL YÜKLEME BUTONU -->
+                    <div id="quick-excel-btn" style="margin-top: 20px; text-align: center;">
+                        <button class="btn btn-warning" onclick="document.getElementById('excelImport').click()" style="padding: 12px 24px; font-size: 14px;">
+                            📥 EXCEL'DEN PARÇA YÜKLE
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button class="btn btn-success" onclick="saveFile()" style="background: linear-gradient(135deg, #27AE60 0%, #229954 100%);">
+                💾 DOSYAYI KAYDET
+            </button>
+            <button class="btn btn-info" onclick="openSearchModal()" style="background: linear-gradient(135deg, #3498DB 0%, #2874A6 100%);">
+                🔍 DOSYA ARA
+            </button>
+            <button class="btn btn-primary" onclick="createCompleteExcel()">
+                📊 KOMPLE EXCEL ÇIKTISI AL
+            </button>
+            <button class="btn btn-info" onclick="createPartsOnlyExcel()">
+                🔧 SADECE PARÇA LİSTESİ ÇIKTISI
+            </button>
+            <button class="btn btn-warning" onclick="printForm()" style="background: linear-gradient(135deg, #E74C3C 0%, #c0392b 100%);">
+                🖨️ YAZDIR / PDF KAYDET
+            </button>
+            <button class="btn btn-secondary" onclick="clearAll()">
+                🗑️ HEPSİNİ TEMİZLE
+            </button>
+        </div>
+    </div>
+    
+    <!-- DOSYA ARAMA MODAL -->
+    <div id="searchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔍 KAYITLI DOSYALARI ARA</h2>
+                <button class="close-modal" onclick="closeSearchModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Plaka veya ad soyad ile arayın..." oninput="filterFiles()">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="files-list" id="filesList">
+                    <div class="empty-state">
+                        <p>📁 Henüz kaydedilmiş dosya yok</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PARÇA ÖNİZLEME MODAL -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h2>👁️ PARÇA LİSTESİ ÖNİZLEME</h2>
+                <button class="close-modal" onclick="closePreviewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="previewMessage" style="padding: 15px; background: #E8F5E9; border-left: 4px solid #27AE60; border-radius: 6px; margin-bottom: 20px;">
+                    <strong>✅ AI Analizi Tamamlandı!</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 13px;">Aşağıdaki parçalar tespit edildi. Kontrol edip onaylayın.</p>
+                </div>
+                <div id="previewContent" style="max-height: 400px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <!-- Önizleme tablosu buraya gelecek -->
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                    <button onclick="closePreviewModal()" style="padding: 12px 24px; background: #95a5a6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ❌ İptal
+                    </button>
+                    <button onclick="confirmParcaListesi()" style="padding: 12px 24px; background: linear-gradient(135deg, #27AE60 0%, #229954 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ✅ ONAYLA VE EKLE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let partsList = [];
+        
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPartsFromStorage();
+        });
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'dosya') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('dosya-tab').classList.add('active');
+            } else {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('parca-tab').classList.add('active');
+            }
+        }
+        
+        function addPart() {
+            const name = document.getElementById('part_name').value.trim();
+            const oem = document.getElementById('part_oem').value.trim();
+            const original = parseFloat(document.getElementById('part_original').value) || 0;
+            const quantity = parseInt(document.getElementById('part_quantity').value) || 1;
+            
+            if (!name) {
+                alert('⚠️ Lütfen parça adını girin!');
+                return;
+            }
+            
+            if (original <= 0) {
+                alert('⚠️ Lütfen geçerli bir fiyat girin!');
+                return;
+            }
+            
+            const part = {
+                name: name,
+                oem: oem,
+                original: original,
+                quantity: quantity
+            };
+            
+            partsList.push(part);
+            savePartsToStorage();
+            renderPartsTable();
+            clearPartInputs();
+        }
+        
+        function clearPartInputs() {
+            document.getElementById('part_name').value = '';
+            document.getElementById('part_oem').value = '';
+            document.getElementById('part_original').value = '';
+            document.getElementById('part_quantity').value = '1';
+        }
+        
+        function deletePart(index) {
+            if (confirm('Bu parçayı silmek istediğinize emin misiniz?')) {
+                partsList.splice(index, 1);
+                savePartsToStorage();
+                renderPartsTable();
+            }
+        }
+        
+        function renderPartsTable() {
+            const tbody = document.getElementById('partsTableBody');
+            const totalSection = document.getElementById('totalSection');
+            const kdvChecked = document.getElementById('kdvCheckbox').checked;
+            const iscilik = parseFloat(document.getElementById('iscilikBedeli').value) || 0;
+            
+            if (partsList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">Henüz parça eklenmedi.</td></tr>';
+                totalSection.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            let totalParca = 0;  // KDV'siz toplam
+            
+            partsList.forEach((part, index) => {
+                const birimFiyat = part.original;
+                const kdvTutari = birimFiyat * 0.20;
+                const kdvDahil = birimFiyat + kdvTutari;
+                const satirToplam = birimFiyat * part.quantity;
+                
+                totalParca += satirToplam;
+                
+                html += `
+                    <tr>
+                        <td style="text-align: center;">${index + 1}</td>
+                        <td>${part.name}</td>
+                        <td style="text-align: center;">${part.oem || '-'}</td>
+                        <td style="text-align: right; font-weight: 600;">${birimFiyat.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #E67E22;">${kdvTutari.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: 600; color: #27AE60;">${kdvDahil.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="text-align: center;">${part.quantity}</td>
+                        <td class="actions" style="text-align: center;">
+                            <button class="delete-btn" onclick="deletePart(${index})" style="padding: 4px 8px; font-size: 11px;">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            
+            // Toplamları hesapla
+            const totalKDV = totalParca * 0.20;
+            const totalParcaKDV = totalParca + totalKDV;
+            const genelToplam = (kdvChecked ? totalParcaKDV : totalParca) + iscilik;
+            
+            // Toplamları göster
+            document.getElementById('totalParca').textContent = totalParca.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+            document.getElementById('totalKDV').textContent = totalKDV.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+            document.getElementById('totalParcaKDV').textContent = totalParcaKDV.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+            document.getElementById('totalIscilik').textContent = iscilik.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+            document.getElementById('genelToplam').textContent = genelToplam.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+            
+            // KDV satırlarını göster/gizle
+            if (kdvChecked) {
+                document.getElementById('kdvRow').style.display = 'flex';
+                document.getElementById('parcaKDVRow').style.display = 'flex';
+            } else {
+                document.getElementById('kdvRow').style.display = 'none';
+                document.getElementById('parcaKDVRow').style.display = 'none';
+            }
+            
+            // İşçilik satırını göster/gizle
+            if (iscilik > 0) {
+                document.getElementById('iscilikRow').style.display = 'flex';
+            } else {
+                document.getElementById('iscilikRow').style.display = 'none';
+            }
+            
+            totalSection.style.display = 'block';
+        }
+        
+        function savePartsToStorage() {
+            localStorage.setItem('hasarParcaListesi', JSON.stringify(partsList));
+        }
+        
+        function loadPartsFromStorage() {
+            const stored = localStorage.getItem('hasarParcaListesi');
+            if (stored) {
+                partsList = JSON.parse(stored);
+                renderPartsTable();
+            }
+        }
+        
+        function loadDefaultParts() {
+            if (partsList.length > 0) {
+                if (!confirm('Mevcut parça listesi silinecek ve varsayılan Kawasaki Z900 parçaları yüklenecek. Devam edilsin mi?')) {
+                    return;
+                }
+            }
+            
+            partsList = [
+                {name: 'Ön Far Komple LED', oem: '', original: 22000, muadil: '11500', quantity: 1},
+                {name: 'Far Taşıyıcı Braketi', oem: '', original: 3000, muadil: '1500', quantity: 1},
+                {name: 'Ön Maske Alt Plastiği', oem: '', original: 3800, muadil: '1800', quantity: 1},
+                {name: 'Ön Çamurluk', oem: '', original: 5200, muadil: '2500', quantity: 1},
+                {name: 'Yakıt Deposu', oem: '', original: 30000, muadil: '-', quantity: 1},
+                {name: 'Depo Yan Kapak Sağ', oem: '', original: 4200, muadil: '2100', quantity: 1},
+                {name: 'Depo Yan Kapak Sol', oem: '', original: 4200, muadil: '2100', quantity: 1},
+                {name: 'Radyatör', oem: '', original: 18500, muadil: '10000', quantity: 1},
+                {name: 'Radyatör Yan Hava Kanalı', oem: '', original: 2500, muadil: '1200', quantity: 1},
+                {name: 'Motor Alt Koruma Plastiği', oem: '', original: 3000, muadil: '1500', quantity: 1},
+                {name: 'Motor Sağ Kapak', oem: '', original: 5000, muadil: '-', quantity: 1},
+                {name: 'Ön Sinyal Sağ', oem: '', original: 2000, muadil: '800', quantity: 1},
+                {name: 'Ön Sinyal Sol', oem: '', original: 2000, muadil: '800', quantity: 1},
+                {name: 'Ayna Sağ', oem: '', original: 3000, muadil: '1000', quantity: 1},
+                {name: 'Ayna Sol', oem: '', original: 3000, muadil: '1000', quantity: 1}
+            ];
+            
+            savePartsToStorage();
+            renderPartsTable();
+            alert('Varsayılan Kawasaki Z900 parçaları yüklendi!');
+        }
+        
+        function downloadTemplate() {
+            const wb = XLSX.utils.book_new();
+            
+            const ws_data = [
+                ['PARÇA LİSTESİ ŞABLONU - MR HASAR DANIŞMANLIK'],
+                ['Bu şablonu doldurup sisteme yükleyebilirsiniz'],
+                [],
+                ['Parça Adı', 'OEM Kodu', 'Orijinal Fiyat (TL)', 'Miktar'],
+                ['Ön Far Komple LED', '12345-ABC', 22000, 1],
+                ['Far Taşıyıcı Braketi', '67890-DEF', 3000, 1],
+                ['Ön Çamurluk', '', 5200, 1],
+                [],
+                ['NOTLAR:'],
+                ['- Parça Adı: Zorunlu alan'],
+                ['- OEM Kodu: Opsiyonel (boş bırakılabilir)'],
+                ['- Orijinal Fiyat: Zorunlu (sayı olarak, KDV hariç fiyat)'],
+                ['- Miktar: Varsayılan 1, değiştirilebilir'],
+                [''],
+                ['KDV (%20) otomatik hesaplanacaktır.'],
+                ['İlk 4 satırı silmeyin! Parçaları 5. satırdan itibaren yazın.']
+            ];
+            
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            
+            // Kolon genişlikleri
+            ws['!cols'] = [
+                {wch: 35}, // Parça Adı
+                {wch: 15}, // OEM Kodu
+                {wch: 18}, // Orijinal Fiyat
+                {wch: 10}  // Miktar
+            ];
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'Parça Listesi');
+            XLSX.writeFile(wb, 'Parca_Listesi_Sablonu.xlsx');
+            
+            alert('📄 Şablon indirildi! Doldurup yükleyebilirsiniz.');
+        }
+        
+        function importFromExcel() {
+            const fileInput = document.getElementById('excelImport');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('⚠️ Lütfen önce bir Excel dosyası seçin!');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // İlk sheet'i al
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                    
+                    // Başlık satırını bul (Parça Adı içeren satır)
+                    let headerRowIndex = -1;
+                    for (let i = 0; i < jsonData.length; i++) {
+                        if (jsonData[i] && jsonData[i][0] && 
+                            (jsonData[i][0].toString().toLowerCase().includes('parça') || 
+                             jsonData[i][0].toString().toLowerCase().includes('parca'))) {
+                            headerRowIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    if (headerRowIndex === -1) {
+                        alert('⚠️ Excel dosyasında "Parça Adı" başlık satırı bulunamadı!');
+                        return;
+                    }
+                    
+                    // Başlıktan sonraki satırları oku
+                    let importedParts = [];
+                    let errorCount = 0;
+                    let startRow = headerRowIndex + 1;
+                    
+                    // Bir sonraki satır da başlık mı kontrol et (çift başlık durumu)
+                    if (startRow < jsonData.length && jsonData[startRow] && jsonData[startRow][0]) {
+                        const nextRowFirst = jsonData[startRow][0].toString().toLowerCase();
+                        if (nextRowFirst.includes('parça') || nextRowFirst.includes('parca') || 
+                            nextRowFirst.includes('oem') || nextRowFirst.includes('kod')) {
+                            startRow++; // Bir satır daha atla
+                        }
+                    }
+                    
+                    for (let i = startRow; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        
+                        // Boş satırları atla
+                        if (!row || !row[0] || row[0].toString().trim() === '') continue;
+                        
+                        // NOT veya açıklama satırlarını atla
+                        const firstCell = row[0].toString().toUpperCase();
+                        if (firstCell.includes('NOT') || firstCell.includes('TOPLAM') || 
+                            firstCell.includes('✅') || firstCell.includes('🔢') || firstCell.includes('KDV')) continue;
+                        
+                        try {
+                            const partName = row[0] ? row[0].toString().trim() : '';
+                            const oem = row[1] ? row[1].toString().trim() : '';
+                            const original = parseFloat(row[2]) || 0;
+                            
+                            // Miktar kontrolü - 4. sütundan oku (artık muadil yok)
+                            let quantity = 1;
+                            if (row[3] !== undefined && row[3] !== null && row[3] !== '') {
+                                const qty = parseInt(row[3]);
+                                if (!isNaN(qty) && qty > 0) {
+                                    quantity = qty;
+                                }
+                            }
+                            
+                            if (partName && original > 0) {
+                                importedParts.push({
+                                    name: partName,
+                                    oem: oem,
+                                    original: original,
+                                    quantity: quantity
+                                });
+                            }
+                        } catch (err) {
+                            errorCount++;
+                            console.log('Satır atlandi:', row, err);
+                        }
+                    }
+                    
+                    if (importedParts.length === 0) {
+                        alert('⚠️ Excel dosyasında geçerli parça bulunamadı!');
+                        return;
+                    }
+                    
+                    // Mevcut listeyi temizle ve yeni parçaları ekle
+                    if (partsList.length > 0) {
+                        if (!confirm(`Mevcut ${partsList.length} parça silinecek ve ${importedParts.length} yeni parça eklenecek. Devam edilsin mi?`)) {
+                            return;
+                        }
+                    }
+                    
+                    partsList = importedParts;
+                    savePartsToStorage();
+                    renderPartsTable();
+                    
+                    console.log('✅ İçe aktarılan parçalar:', partsList);
+                    
+                    // File input'u temizle
+                    fileInput.value = '';
+                    
+                    let message = `✅ Başarıyla ${importedParts.length} parça içe aktarıldı!`;
+                    if (errorCount > 0) {
+                        message += `\n⚠️ ${errorCount} satır atlandı.`;
+                    }
+                    message += '\n\nParça listesi sekmesine geçiliyor...';
+                    alert(message);
+                    
+                    // Parça listesi sekmesine geç
+                    setTimeout(() => {
+                        switchTab('parca');
+                    }, 100);
+                    
+                } catch (error) {
+                    console.error('Excel okuma hatası:', error);
+                    alert('❌ Excel dosyası okunurken hata oluştu! Lütfen dosya formatını kontrol edin.');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function getValue(id) {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
+        }
+        
+        function setValue(id, value) {
+            const el = document.getElementById(id);
+            if (el && value !== null && value !== undefined) {
+                el.value = String(value).trim();
+            }
+        }
+        
+        function printForm() {
+            // Plaka bilgisini yazdırma başlığına ekle
+            const plaka = getValue('plaka') || 'Bilinmiyor';
+            const marka = getValue('marka') || '';
+            
+            let plakaInfo = `Plaka: ${plaka}`;
+            if (marka) {
+                plakaInfo += ` | Araç: ${marka}`;
+            }
+            
+            document.getElementById('print-plaka-info').textContent = plakaInfo;
+            
+            // Her iki sekmeyi de görünür yap
+            document.getElementById('dosya-tab').classList.add('active');
+            document.getElementById('parca-tab').classList.add('active');
+            
+            // Yazdır
+            window.print();
+            
+            // Yazdırma sonrası sadece aktif sekmeyi göster
+            setTimeout(() => {
+                const activeTab = document.querySelector('.tab.active');
+                if (activeTab && activeTab.textContent.includes('İhbar')) {
+                    document.getElementById('parca-tab').classList.remove('active');
+                } else if (activeTab && activeTab.textContent.includes('Parça')) {
+                    document.getElementById('dosya-tab').classList.remove('active');
+                }
+            }, 1000);
+        }
+        
+        function clearAll() {
+            if (confirm('TÜM FORM VE PARÇA LİSTESİNİ temizlemek istediğinize emin misiniz?')) {
+                // Tüm form alanlarını temizle
+                document.querySelectorAll('input[type="text"], input[type="date"], textarea, select').forEach(el => {
+                    if (el.type === 'text' || el.type === 'date' || el.tagName === 'TEXTAREA') {
+                        el.value = '';
+                    }
+                });
+                
+                // Select'leri sıfırla
+                document.getElementById('dosya_turu').value = 'KASKO';
+                
+                // Checkbox'ları temizle
+                document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+                    el.checked = false;
+                });
+                
+                // Parça listesini temizle
+                partsList = [];
+                savePartsToStorage();
+                renderPartsTable();
+                
+                alert('Tüm form ve parça listesi temizlendi!');
+            }
+        }
+        
+        // DOSYA KAYDETME VE ARAMA FONKSİYONLARI
+        function saveFile() {
+            const plaka = getValue('plaka').trim();
+            const sahipAd = getValue('sahip_ad').trim();
+            
+            if (!plaka) {
+                alert('⚠️ Plaka bilgisi zorunludur!');
+                return;
+            }
+            
+            if (!sahipAd) {
+                alert('⚠️ Araç sahibi adı zorunludur!');
+                return;
+            }
+            
+            // Form verilerini topla
+            const formData = {
+                // Araç ve sahip bilgileri
+                plaka: plaka,
+                marka: getValue('marka'),
+                sasi: getValue('sasi'),
+                kilometre: getValue('kilometre'),
+                sahip_ad: sahipAd,
+                sahip_tel: getValue('sahip_tel'),
+                iban: getValue('iban'),
+                
+                // Dosya bilgileri
+                sigorta: getValue('sigorta'),
+                dosya_no: getValue('dosya_no'),
+                dosya_turu: getValue('dosya_turu'),
+                police_no: getValue('police_no'),
+                
+                // Eksper ve servis
+                eksper_adi: getValue('eksper_adi'),
+                eksper_iletisim: getValue('eksper_iletisim'),
+                servis_adi: getValue('servis_adi'),
+                servis_yetkili: getValue('servis_yetkili'),
+                servis_tel: getValue('servis_tel'),
+                
+                // Kaza bilgileri
+                kaza_tarihi: getValue('kaza_tarihi'),
+                kaza_yeri: getValue('kaza_yeri'),
+                kaza_aciklama: getValue('kaza_aciklama'),
+                
+                // Evrak ve işlem durumu
+                evrak: getCheckedItems('evrak'),
+                islem: getCheckedItems('islem'),
+                
+                // Notlar
+                notlar: getValue('notlar')
+            };
+            
+            // Dosya objesi oluştur
+            const fileObj = {
+                id: Date.now().toString(),
+                plaka: plaka,
+                sahipAd: sahipAd,
+                kayitTarihi: new Date().toLocaleString('tr-TR'),
+                formData: formData,
+                parcaListesi: JSON.parse(JSON.stringify(partsList))
+            };
+            
+            // LocalStorage'dan mevcut dosyaları al
+            let files = [];
+            try {
+                const savedFiles = localStorage.getItem('hasar_dosyalar');
+                if (savedFiles) {
+                    files = JSON.parse(savedFiles);
+                }
+            } catch (e) {
+                console.error('Dosyalar yüklenemedi:', e);
+            }
+            
+            // Aynı plaka varsa üzerine yaz, yoksa ekle
+            const existingIndex = files.findIndex(f => f.plaka === plaka);
+            if (existingIndex !== -1) {
+                if (confirm(`${plaka} plakalı dosya zaten kayıtlı. Üzerine yazmak istiyor musunuz?`)) {
+                    files[existingIndex] = fileObj;
+                } else {
+                    return;
+                }
+            } else {
+                files.push(fileObj);
+            }
+            
+            // LocalStorage'a kaydet
+            try {
+                localStorage.setItem('hasar_dosyalar', JSON.stringify(files));
+                alert(`✅ Dosya kaydedildi!\n\n${sahipAd} - ${plaka}`);
+            } catch (e) {
+                alert('❌ Dosya kaydedilemedi! LocalStorage dolu olabilir.');
+                console.error('Kayıt hatası:', e);
+            }
+        }
+        
+        function openSearchModal() {
+            document.getElementById('searchModal').style.display = 'block';
+            document.getElementById('searchInput').value = '';
+            renderFilesList();
+        }
+        
+        function closeSearchModal() {
+            document.getElementById('searchModal').style.display = 'none';
+        }
+        
+        function filterFiles() {
+            renderFilesList();
+        }
+        
+        function renderFilesList() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filesList = document.getElementById('filesList');
+            
+            // LocalStorage'dan dosyaları al
+            let files = [];
+            try {
+                const savedFiles = localStorage.getItem('hasar_dosyalar');
+                if (savedFiles) {
+                    files = JSON.parse(savedFiles);
+                }
+            } catch (e) {
+                console.error('Dosyalar yüklenemedi:', e);
+            }
+            
+            // Arama filtresi uygula
+            if (searchTerm) {
+                files = files.filter(f => 
+                    f.plaka.toLowerCase().includes(searchTerm) || 
+                    f.sahipAd.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Tarihe göre sırala (en yeni üstte)
+            files.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+            
+            // Liste boşsa
+            if (files.length === 0) {
+                filesList.innerHTML = `
+                    <div class="empty-state">
+                        <p>📁 ${searchTerm ? 'Eşleşen dosya bulunamadı' : 'Henüz kaydedilmiş dosya yok'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Dosyaları listele
+            let html = '';
+            files.forEach(file => {
+                const parcaSayisi = file.parcaListesi ? file.parcaListesi.length : 0;
+                html += `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-title">${file.sahipAd} - ${file.plaka}</div>
+                            <div class="file-details">
+                                📅 ${file.kayitTarihi} | 
+                                🔧 ${parcaSayisi} parça | 
+                                📋 ${file.formData.dosya_turu}
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn-small btn-load" onclick="loadFile('${file.id}')">
+                                📂 Yükle
+                            </button>
+                            <button class="btn-small btn-delete" onclick="deleteFile('${file.id}')">
+                                🗑️ Sil
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            filesList.innerHTML = html;
+        }
+        
+        function loadFile(fileId) {
+            // LocalStorage'dan dosyayı al
+            let files = [];
+            try {
+                const savedFiles = localStorage.getItem('hasar_dosyalar');
+                if (savedFiles) {
+                    files = JSON.parse(savedFiles);
+                }
+            } catch (e) {
+                console.error('Dosyalar yüklenemedi:', e);
+                return;
+            }
+            
+            const file = files.find(f => f.id === fileId);
+            if (!file) {
+                alert('❌ Dosya bulunamadı!');
+                return;
+            }
+            
+            // Onay al
+            if (!confirm(`${file.sahipAd} - ${file.plaka}\n\nBu dosyayı yüklemek istediğinize emin misiniz?\nMevcut veriler silinecek!`)) {
+                return;
+            }
+            
+            // Form alanlarını doldur
+            const fd = file.formData;
+            document.getElementById('plaka').value = fd.plaka || '';
+            document.getElementById('marka').value = fd.marka || '';
+            document.getElementById('sasi').value = fd.sasi || '';
+            document.getElementById('kilometre').value = fd.kilometre || '';
+            document.getElementById('sahip_ad').value = fd.sahip_ad || '';
+            document.getElementById('sahip_tel').value = fd.sahip_tel || '';
+            document.getElementById('iban').value = fd.iban || '';
+            
+            document.getElementById('sigorta').value = fd.sigorta || '';
+            document.getElementById('dosya_no').value = fd.dosya_no || '';
+            document.getElementById('dosya_turu').value = fd.dosya_turu || 'KASKO';
+            document.getElementById('police_no').value = fd.police_no || '';
+            
+            document.getElementById('eksper_adi').value = fd.eksper_adi || '';
+            document.getElementById('eksper_iletisim').value = fd.eksper_iletisim || '';
+            document.getElementById('servis_adi').value = fd.servis_adi || '';
+            document.getElementById('servis_yetkili').value = fd.servis_yetkili || '';
+            document.getElementById('servis_tel').value = fd.servis_tel || '';
+            
+            document.getElementById('kaza_tarihi').value = fd.kaza_tarihi || '';
+            document.getElementById('kaza_yeri').value = fd.kaza_yeri || '';
+            document.getElementById('kaza_aciklama').value = fd.kaza_aciklama || '';
+            
+            document.getElementById('notlar').value = fd.notlar || '';
+            
+            // Parça listesini yükle
+            partsList = file.parcaListesi || [];
+            savePartsToStorage();
+            renderPartsTable();
+            
+            // Modal'ı kapat
+            closeSearchModal();
+            
+            // İlk sekmeye geç
+            switchTab('dosya');
+            
+            alert(`✅ Dosya yüklendi!\n\n${file.sahipAd} - ${file.plaka}\n${file.parcaListesi.length} parça yüklendi.`);
+        }
+        
+        function deleteFile(fileId) {
+            // LocalStorage'dan dosyaları al
+            let files = [];
+            try {
+                const savedFiles = localStorage.getItem('hasar_dosyalar');
+                if (savedFiles) {
+                    files = JSON.parse(savedFiles);
+                }
+            } catch (e) {
+                console.error('Dosyalar yüklenemedi:', e);
+                return;
+            }
+            
+            const file = files.find(f => f.id === fileId);
+            if (!file) {
+                alert('❌ Dosya bulunamadı!');
+                return;
+            }
+            
+            // Onay al
+            if (!confirm(`${file.sahipAd} - ${file.plaka}\n\nBu dosyayı silmek istediğinize emin misiniz?`)) {
+                return;
+            }
+            
+            // Dosyayı sil
+            files = files.filter(f => f.id !== fileId);
+            
+            try {
+                localStorage.setItem('hasar_dosyalar', JSON.stringify(files));
+                alert('✅ Dosya silindi!');
+                renderFilesList();
+            } catch (e) {
+                alert('❌ Dosya silinemedi!');
+                console.error('Silme hatası:', e);
+            }
+        }
+        
+        // Modal dışına tıklanınca kapat
+        window.onclick = function(event) {
+            const modal = document.getElementById('searchModal');
+            const previewModal = document.getElementById('previewModal');
+            if (event.target === modal) {
+                closeSearchModal();
+            }
+            if (event.target === previewModal) {
+                closePreviewModal();
+            }
+        }
+        
+        // ÖNİZLEME MODAL FONKSİYONLARI
+        let tempParcaListesi = [];
+        
+        function closePreviewModal() {
+            document.getElementById('previewModal').style.display = 'none';
+            tempParcaListesi = [];
+        }
+        
+        function confirmParcaListesi() {
+            if (tempParcaListesi.length === 0) {
+                alert('⚠️ Eklenecek parça yok!');
+                return;
+            }
+            
+            // Parçaları ekle
+            partsList.push(...tempParcaListesi);
+            savePartsToStorage();
+            renderPartsTable();
+            
+            closePreviewModal();
+            switchTab('parca');
+            
+            alert(`✅ ${tempParcaListesi.length} parça başarıyla eklendi!`);
+        }
+        
+        // RUHSAT YÜKLEME
+        async function handleRuhsatUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Dosya boyutu kontrolü (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('❌ Dosya çok büyük! Maksimum 5MB olmalı.');
+                return;
+            }
+            
+            // Loading göster
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'aiLoading';
+            loadingDiv.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #2C5F8D; margin-bottom: 10px;">AI Ruhsat Analizi</div>
+                        <div style="font-size: 14px; color: #666;">Lütfen bekleyin...</div>
+                        <div style="margin-top: 15px;">
+                            <div style="width: 200px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
+                                <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: loading 1.5s infinite;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    @keyframes loading {
+                        0% { transform: translateX(-100%); }
+                        100% { transform: translateX(100%); }
+                    }
+                </style>
+            `;
+            document.body.appendChild(loadingDiv);
+            
+            try {
+                // Dosyayı base64'e çevir
+                const base64Data = await fileToBase64(file);
+                const mediaType = file.type || 'image/jpeg';
+                
+                // Vercel API'ye gönder
+                const response = await fetch("/api/ruhsat-oku", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        imageData: base64Data,
+                        mediaType: mediaType
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || 'Ruhsat okunamadı');
+                }
+                
+                const ruhsatData = result.data;
+                
+                // Formu doldur
+                if (ruhsatData.marka) document.getElementById('marka').value = ruhsatData.marka;
+                if (ruhsatData.plaka) document.getElementById('plaka').value = ruhsatData.plaka;
+                if (ruhsatData.sasi) document.getElementById('sasi').value = ruhsatData.sasi;
+                
+                // Loading kaldır
+                document.body.removeChild(loadingDiv);
+                
+                // Başarı mesajı
+                alert(`✅ Ruhsat başarıyla okundu!\n\n📋 Marka: ${ruhsatData.marka}\n🚗 Plaka: ${ruhsatData.plaka}\n🔢 Şasi: ${ruhsatData.sasi}`);
+                
+                // İhbar föyü sekmesine geç
+                switchTab('dosya');
+                
+            } catch (error) {
+                console.error('Ruhsat okuma hatası:', error);
+                document.body.removeChild(loadingDiv);
+                alert('❌ Ruhsat okunamadı! Lütfen net bir fotoğraf yükleyin veya manuel olarak girin.\n\nHata: ' + error.message);
+            }
+            
+            // Input'u temizle
+            event.target.value = '';
+        }
+                
+            } catch (error) {
+                console.error('Ruhsat okuma hatası:', error);
+                document.body.removeChild(loadingDiv);
+                alert('❌ Ruhsat okunamadı! Lütfen net bir fotoğraf yükleyin veya manuel olarak girin.');
+            }
+            
+            // Input'u temizle
+            event.target.value = '';
+        }
+        
+        // PARÇA LİSTESİ YÜKLEME
+        async function handleParcaListesiUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Dosya boyutu kontrolü (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('❌ Dosya çok büyük! Maksimum 5MB olmalı.');
+                return;
+            }
+            
+            // Loading göster
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'aiLoading';
+            loadingDiv.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #2C5F8D; margin-bottom: 10px;">AI Parça Listesi Analizi</div>
+                        <div style="font-size: 14px; color: #666;">El yazısı okunuyor, fiyatlar araştırılıyor...</div>
+                        <div style="margin-top: 15px;">
+                            <div style="width: 200px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
+                                <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: loading 1.5s infinite;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+            
+            try {
+                // Dosyayı base64'e çevir
+                const base64Data = await fileToBase64(file);
+                const mediaType = file.type || 'image/jpeg';
+                
+                // Vercel API'ye gönder
+                const response = await fetch("/api/parca-oku", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        imageData: base64Data,
+                        mediaType: mediaType
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || 'Parça listesi okunamadı');
+                }
+                
+                const parcaData = result.data;
+                
+                if (parcaData.parcalar && parcaData.parcalar.length > 0) {
+                    tempParcaListesi = parcaData.parcalar;
+                    
+                    // Loading kaldır
+                    document.body.removeChild(loadingDiv);
+                    
+                    // Önizleme göster
+                    showPreview(tempParcaListesi);
+                } else {
+                    throw new Error('Parça bulunamadı');
+                }
+                
+            } catch (error) {
+                console.error('Parça listesi okuma hatası:', error);
+                document.body.removeChild(loadingDiv);
+                alert('❌ Parça listesi okunamadı! Lütfen net bir fotoğraf yükleyin veya manuel olarak ekleyin.\n\nHata: ' + error.message);
+            }
+            
+            // Input'u temizle
+            event.target.value = '';
+        }
+            
+            // Input'u temizle
+            event.target.value = '';
+        }
+        
+        function showPreview(parcalar) {
+            const previewContent = document.getElementById('previewContent');
+            
+            let html = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: left;">Sıra</th>
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: left;">Parça Adı</th>
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: left;">OEM Kod</th>
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: right;">Orijinal (TL)</th>
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Miktar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            parcalar.forEach((part, index) => {
+                html += `
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">${index + 1}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${part.name}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${part.oem || '-'}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: right; font-weight: 600;">${parseFloat(part.original).toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">${part.quantity}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            
+            previewContent.innerHTML = html;
+            
+            // Modal'ı göster
+            document.getElementById('previewModal').style.display = 'block';
+            
+            // Mesajı güncelle
+            document.getElementById('previewMessage').innerHTML = `
+                <strong>✅ AI Analizi Tamamlandı!</strong>
+                <p style="margin: 5px 0 0 0; font-size: 13px;">${parcalar.length} parça tespit edildi. Kontrol edip onaylayın.</p>
+            `;
+        }
+        
+        // Dosyayı base64'e çevirme fonksiyonu
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function createCompleteExcel() {
+            const wb = XLSX.utils.book_new();
+            
+            // İHBAR FÖYÜ SAYFASI - Düzgün tablo formatı
+            const ws1_data = [
+                ['MOTOSİKLET HASAR İHBAR FÖYÜ'],
+                ['MR Hasar Danışmanlık ve Filo Yönetimi'],
+                [],
+                ['ARAÇ VE SAHİP BİLGİLERİ'],
+                ['Plaka:', getValue('plaka'), 'Marka/Model:', getValue('marka')],
+                ['Şasi No:', getValue('sasi'), 'Kilometre:', getValue('kilometre')],
+                ['Ruhsat Sahibi:', getValue('sahip_ad'), 'TC/Telefon:', getValue('sahip_tel')],
+                ['IBAN:', getValue('iban'), '', ''],
+                [],
+                ['DOSYA BİLGİLERİ'],
+                ['Sigorta Şirketi:', getValue('sigorta'), 'Dosya No:', getValue('dosya_no')],
+                ['Dosya Türü:', getValue('dosya_turu'), 'Poliçe No:', getValue('police_no')],
+                [],
+                ['EKSPER VE SERVİS BİLGİLERİ'],
+                ['Eksper Ofisi & Adı:', getValue('eksper_adi'), 'İletişim:', getValue('eksper_iletisim')],
+                ['────────────────────────────'],
+                ['Servis Adı:', getValue('servis_adi'), 'Yetkili:', getValue('servis_yetkili')],
+                ['Servis İletişim ve Adres:', getValue('servis_tel'), '', ''],
+                [],
+                ['KAZA BİLGİLERİ'],
+                ['Kaza Tarihi:', getValue('kaza_tarihi')],
+                ['Kaza Yeri:', getValue('kaza_yeri')],
+                ['Kaza Açıklaması:', getValue('kaza_aciklama')],
+                [],
+                ['EVRAK KONTROL'],
+                [getCheckedItems('evrak')],
+                [],
+                ['İŞLEM DURUMU'],
+                [getCheckedItems('islem')],
+                [],
+                ['NOTLAR'],
+                [getValue('notlar') || 'Yok']
+            ];
+            
+            const ws1 = XLSX.utils.aoa_to_sheet(ws1_data);
+            
+            // Kolon genişlikleri
+            ws1['!cols'] = [
+                {wch: 25},
+                {wch: 30},
+                {wch: 20},
+                {wch: 30}
+            ];
+            
+            XLSX.utils.book_append_sheet(wb, ws1, 'İhbar Föyü');
+            
+            // PARÇA LİSTESİ SAYFASI
+            if (partsList.length > 0) {
+                const ws2_data = [
+                    ['HASAR PARÇA LİSTESİ VE FİYATLANDIRMA'],
+                    [`Araç: ${getValue('marka')} - Plaka: ${getValue('plaka')}`],
+                    [],
+                    ['Sıra', 'Parça Adı', 'OEM Kodu', 'Orijinal (TL)', 'Muadil (TL)', 'Miktar']
+                ];
+                
+                let totalOriginal = 0;
+                let totalMuadil = 0;
+                
+                partsList.forEach((part, index) => {
+                    const muadilValue = part.muadil === '-' ? 0 : parseFloat(part.muadil) || 0;
+                    totalOriginal += part.original * part.quantity;
+                    totalMuadil += muadilValue * part.quantity;
+                    
+                    ws2_data.push([
+                        index + 1,
+                        part.name,
+                        part.oem || '-',
+                        part.original,
+                        part.muadil === '-' ? '-' : parseFloat(part.muadil),
+                        part.quantity
+                    ]);
+                });
+                
+                ws2_data.push([]);
+                ws2_data.push(['TOPLAM ORİJİNAL:', '', '', totalOriginal, '', '']);
+                ws2_data.push(['TOPLAM MUADİL:', '', '', totalMuadil, '', '']);
+                const totalKarma = (totalOriginal + totalMuadil) / 2;
+                ws2_data.push(['TAHMİNİ HASAR (Karma):', '', '', totalKarma, '', '']);
+                ws2_data.push([]);
+                ws2_data.push(['NOT:', 'Orijinal parça fiyatları yetkili servis güncel fiyatlarıdır.']);
+                ws2_data.push(['', 'Muadil parça fiyatları A sınıfı kaliteli muadil parçalara göredir.']);
+                ws2_data.push(['', 'İşçilik bedeli, boya ve diğer masraflar dahil değildir.']);
+                
+                const ws2 = XLSX.utils.aoa_to_sheet(ws2_data);
+                
+                // Kolon genişlikleri
+                ws2['!cols'] = [
+                    {wch: 8},
+                    {wch: 35},
+                    {wch: 20},
+                    {wch: 15},
+                    {wch: 15},
+                    {wch: 8}
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, ws2, 'Parça Listesi');
+            }
+            
+            // Excel dosyasını indir
+            const plaka = getValue('plaka').replace(/\s+/g, '_') || 'dosya';
+            const tarih = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            XLSX.writeFile(wb, `Komple_Ihbar_${plaka}_${tarih}.xlsx`);
+            
+            alert('✅ Komple Excel dosyası (İhbar Föyü + Parça Listesi) indirildi!');
+        }
+        
+        function createPartsOnlyExcel() {
+            if (partsList.length === 0) {
+                alert('⚠️ Parça listesi boş! Lütfen önce parça ekleyin.');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            
+            const ws_data = [
+                ['HASAR PARÇA LİSTESİ VE FİYATLANDIRMA'],
+                [`Araç: ${getValue('marka')} - Plaka: ${getValue('plaka')}`],
+                [],
+                ['Sıra', 'Parça Adı', 'OEM Kodu', 'Orijinal (TL)', 'Muadil (TL)', 'Miktar']
+            ];
+            
+            let totalOriginal = 0;
+            let totalMuadil = 0;
+            
+            partsList.forEach((part, index) => {
+                const muadilValue = part.muadil === '-' ? 0 : parseFloat(part.muadil) || 0;
+                totalOriginal += part.original * part.quantity;
+                totalMuadil += muadilValue * part.quantity;
+                
+                ws_data.push([
+                    index + 1,
+                    part.name,
+                    part.oem || '-',
+                    part.original,
+                    part.muadil === '-' ? '-' : parseFloat(part.muadil),
+                    part.quantity
+                ]);
+            });
+            
+            ws_data.push([]);
+            ws_data.push(['TOPLAM ORİJİNAL:', '', '', totalOriginal, '', '']);
+            ws_data.push(['TOPLAM MUADİL:', '', '', totalMuadil, '', '']);
+            const totalKarma = (totalOriginal + totalMuadil) / 2;
+            ws_data.push(['TAHMİNİ HASAR (Karma):', '', '', totalKarma, '', '']);
+            ws_data.push([]);
+            ws_data.push(['NOT:', 'Orijinal parça fiyatları yetkili servis güncel fiyatlarıdır.']);
+            ws_data.push(['', 'Muadil parça fiyatları A sınıfı kaliteli muadil parçalara göredir.']);
+            ws_data.push(['', 'İşçilik bedeli, boya ve diğer masraflar dahil değildir.']);
+            
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            
+            // Kolon genişlikleri
+            ws['!cols'] = [
+                {wch: 8},
+                {wch: 35},
+                {wch: 20},
+                {wch: 15},
+                {wch: 15},
+                {wch: 8}
+            ];
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'Parça Listesi');
+            
+            const plaka = getValue('plaka').replace(/\s+/g, '_') || 'dosya';
+            const tarih = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            XLSX.writeFile(wb, `Parca_Listesi_${plaka}_${tarih}.xlsx`);
+            
+            alert('✅ Parça listesi Excel dosyası indirildi!');
+        }
+        
+        
+        function getCheckedItems(prefix) {
+            const items = [];
+            document.querySelectorAll(`input[id^="${prefix}_"]`).forEach(cb => {
+                if (cb.checked) {
+                    items.push(cb.nextElementSibling.textContent);
+                }
+            });
+            return items.join(', ') || 'Yok';
+        }
+        
+    </script>
+</body>
+</html>
