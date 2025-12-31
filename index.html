@@ -1943,7 +1943,7 @@
                 // Tesseract.js ile OCR
                 const progressEl = document.getElementById('ocrProgress');
                 
-                const worker = await Tesseract.createWorker('tur', 1, {
+                const worker = await Tesseract.createWorker('eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             progressEl.textContent = `Okunuyor... %${Math.round(m.progress * 100)}`;
@@ -2131,7 +2131,7 @@
                 // Tesseract.js ile OCR
                 const progressEl = document.getElementById('ocrProgressParca');
                 
-                const worker = await Tesseract.createWorker('tur', 1, {
+                const worker = await Tesseract.createWorker('eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             progressEl.textContent = `Okunuyor... %${Math.round(m.progress * 100)}`;
