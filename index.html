@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1919,9 +1920,9 @@
             loadingDiv.innerHTML = `
                 <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
                     <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
-                        <div style="font-size: 18px; font-weight: 600; color: #2C5F8D; margin-bottom: 10px;">AI Ruhsat Analizi</div>
-                        <div style="font-size: 14px; color: #666;">Lütfen bekleyin...</div>
+                        <div style="font-size: 48px; margin-bottom: 15px;">📸</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #2C5F8D; margin-bottom: 10px;">Ruhsat Okunuyor</div>
+                        <div style="font-size: 14px; color: #666;" id="ocrProgress">Hazırlanıyor...</div>
                         <div style="margin-top: 15px;">
                             <div style="width: 200px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
                                 <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: loading 1.5s infinite;"></div>
@@ -1939,29 +1940,22 @@
             document.body.appendChild(loadingDiv);
             
             try {
-                // Dosyayı base64'e çevir
-                const base64Data = await fileToBase64(file);
-                const mediaType = file.type || 'image/jpeg';
+                // Tesseract.js ile OCR
+                const progressEl = document.getElementById('ocrProgress');
                 
-                // Vercel API'ye gönder
-                const response = await fetch("/api/ruhsat-oku", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        imageData: base64Data,
-                        mediaType: mediaType
-                    })
+                const worker = await Tesseract.createWorker('tur', 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            progressEl.textContent = `Okunuyor... %${Math.round(m.progress * 100)}`;
+                        }
+                    }
                 });
                 
-                const result = await response.json();
+                const { data: { text } } = await worker.recognize(file);
+                await worker.terminate();
                 
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error || 'Ruhsat okunamadı');
-                }
-                
-                const ruhsatData = result.data;
+                // Ruhsat bilgilerini çıkar
+                const ruhsatData = extractRuhsatInfo(text);
                 
                 // Formu doldur
                 if (ruhsatData.marka) document.getElementById('marka').value = ruhsatData.marka;
@@ -1972,19 +1966,129 @@
                 document.body.removeChild(loadingDiv);
                 
                 // Başarı mesajı
-                alert(`✅ Ruhsat başarıyla okundu!\n\n📋 Marka: ${ruhsatData.marka}\n🚗 Plaka: ${ruhsatData.plaka}\n🔢 Şasi: ${ruhsatData.sasi}`);
-                
-                // İhbar föyü sekmesine geç
-                switchTab('dosya');
+                if (ruhsatData.marka || ruhsatData.plaka || ruhsatData.sasi) {
+                    alert(`✅ Ruhsat okundu!\n\n📋 Marka: ${ruhsatData.marka || '-'}\n🚗 Plaka: ${ruhsatData.plaka || '-'}\n🔢 Şasi: ${ruhsatData.sasi || '-'}\n\n⚠️ Lütfen bilgileri kontrol edin!`);
+                    switchTab('dosya');
+                } else {
+                    alert('⚠️ Ruhsat bilgileri okunamadı!\n\nLütfen manuel olarak girin veya daha net bir fotoğraf deneyin.');
+                }
                 
             } catch (error) {
-                console.error('Ruhsat okuma hatası:', error);
+                console.error('OCR hatası:', error);
                 document.body.removeChild(loadingDiv);
-                alert('❌ Ruhsat okunamadı! Lütfen net bir fotoğraf yükleyin veya manuel olarak girin.\n\nHata: ' + error.message);
+                alert('❌ Ruhsat okunamadı!\n\nLütfen net bir fotoğraf yükleyin veya manuel olarak girin.');
             }
             
             // Input'u temizle
             event.target.value = '';
+        }
+        
+        function extractRuhsatInfo(text) {
+            const info = {
+                marka: '',
+                plaka: '',
+                sasi: ''
+            };
+            
+            // Plaka ara (Türkiye formatı: 34 ABC 123)
+            const plakaRegex = /\b\d{2}\s*[A-Z]{1,3}\s*\d{2,4}\b/g;
+            const plakaMatch = text.match(plakaRegex);
+            if (plakaMatch && plakaMatch.length > 0) {
+                info.plaka = plakaMatch[0].replace(/\s+/g, ' ').trim();
+            }
+            
+            // Şasi ara (17 karakterli alfanumerik)
+            const sasiRegex = /\b[A-HJ-NPR-Z0-9]{17}\b/g;
+            const sasiMatch = text.match(sasiRegex);
+            if (sasiMatch && sasiMatch.length > 0) {
+                info.sasi = sasiMatch[0];
+            }
+            
+            // Marka ara (yaygın markalar)
+            const markalar = ['HONDA', 'YAMAHA', 'KAWASAKI', 'SUZUKI', 'BMW', 'KTM', 'DUCATI', 
+                            'HARLEY', 'TRIUMPH', 'APRILIA', 'MV AGUSTA', 'BENELLI', 'KYMCO',
+                            'TOYOTA', 'MERCEDES', 'BMW', 'AUDI', 'VOLKSWAGEN', 'RENAULT', 'FIAT',
+                            'FORD', 'OPEL', 'PEUGEOT', 'CITROEN', 'HYUNDAI', 'KIA', 'NISSAN', 'MAZDA'];
+            
+            const upperText = text.toUpperCase();
+            for (const marka of markalar) {
+                if (upperText.includes(marka)) {
+                    // Model de varsa birlikte al
+                    const markaIndex = upperText.indexOf(marka);
+                    const modelText = text.substring(markaIndex, markaIndex + 50);
+                    const modelMatch = modelText.match(/[A-Z][A-Z0-9\s\-]{2,20}/);
+                    if (modelMatch) {
+                        info.marka = modelMatch[0].trim();
+                    } else {
+                        info.marka = marka;
+                    }
+                    break;
+                }
+            }
+            
+            return info;
+        }
+        
+        function extractParcaListesi(text) {
+            const parcalar = [];
+            const lines = text.split('\n');
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line || line.length < 3) continue;
+                
+                // Fiyat ara (sayı + TL, ₺ veya virgül/nokta formatları)
+                const fiyatRegex = /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(?:TL|₺|tl)?/g;
+                const fiyatMatches = line.match(fiyatRegex);
+                
+                let fiyat = 0;
+                if (fiyatMatches && fiyatMatches.length > 0) {
+                    // En büyük sayıyı fiyat olarak al
+                    const fiyatlar = fiyatMatches.map(f => {
+                        const numStr = f.replace(/[TL₺tl\s]/g, '').replace(/\./g, '').replace(',', '.');
+                        return parseFloat(numStr) || 0;
+                    });
+                    fiyat = Math.max(...fiyatlar);
+                }
+                
+                // Fiyatı satırdan çıkar, kalan kısmı parça adı olarak al
+                let parcaAdi = line.replace(fiyatRegex, '').trim();
+                
+                // Başındaki numaraları temizle (1. 2. gibi)
+                parcaAdi = parcaAdi.replace(/^\d+[\.\)]\s*/, '');
+                
+                // Çok kısa veya fiyatsız satırları atla
+                if (parcaAdi.length >= 3 && (fiyat > 0 || parcaAdi.length > 10)) {
+                    parcalar.push({
+                        name: parcaAdi,
+                        oem: '', // OCR'dan OEM çıkarmak zor
+                        original: fiyat,
+                        quantity: 1
+                    });
+                }
+            }
+            
+            // En az 1 parça bulunmalı
+            if (parcalar.length === 0) {
+                // Alternatif: Tüm metni tek parça olarak al
+                const fiyatRegex = /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(?:TL|₺|tl)?/g;
+                const allFiyatlar = text.match(fiyatRegex);
+                if (allFiyatlar && allFiyatlar.length > 0) {
+                    const maxFiyat = Math.max(...allFiyatlar.map(f => {
+                        const num = f.replace(/[TL₺tl\s]/g, '').replace(/\./g, '').replace(',', '.');
+                        return parseFloat(num) || 0;
+                    }));
+                    
+                    parcalar.push({
+                        name: text.substring(0, 50).replace(/\n/g, ' ').trim() + '...',
+                        oem: '',
+                        original: maxFiyat,
+                        quantity: 1
+                    });
+                }
+            }
+            
+            return parcalar;
         }
         
         // PARÇA LİSTESİ YÜKLEME
@@ -2004,9 +2108,9 @@
             loadingDiv.innerHTML = `
                 <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
                     <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
-                        <div style="font-size: 18px; font-weight: 600; color: #2C5F8D; margin-bottom: 10px;">AI Parça Listesi Analizi</div>
-                        <div style="font-size: 14px; color: #666;">El yazısı okunuyor, fiyatlar araştırılıyor...</div>
+                        <div style="font-size: 48px; margin-bottom: 15px;">📸</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #2C5F8D; margin-bottom: 10px;">Parça Listesi Okunuyor</div>
+                        <div style="font-size: 14px; color: #666;" id="ocrProgressParca">Hazırlanıyor...</div>
                         <div style="margin-top: 15px;">
                             <div style="width: 200px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
                                 <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: loading 1.5s infinite;"></div>
@@ -2014,36 +2118,35 @@
                         </div>
                     </div>
                 </div>
+                <style>
+                    @keyframes loading {
+                        0% { transform: translateX(-100%); }
+                        100% { transform: translateX(100%); }
+                    }
+                </style>
             `;
             document.body.appendChild(loadingDiv);
             
             try {
-                // Dosyayı base64'e çevir
-                const base64Data = await fileToBase64(file);
-                const mediaType = file.type || 'image/jpeg';
+                // Tesseract.js ile OCR
+                const progressEl = document.getElementById('ocrProgressParca');
                 
-                // Vercel API'ye gönder
-                const response = await fetch("/api/parca-oku", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        imageData: base64Data,
-                        mediaType: mediaType
-                    })
+                const worker = await Tesseract.createWorker('tur', 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            progressEl.textContent = `Okunuyor... %${Math.round(m.progress * 100)}`;
+                        }
+                    }
                 });
                 
-                const result = await response.json();
+                const { data: { text } } = await worker.recognize(file);
+                await worker.terminate();
                 
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error || 'Parça listesi okunamadı');
-                }
+                // Parça bilgilerini çıkar
+                const parcalar = extractParcaListesi(text);
                 
-                const parcaData = result.data;
-                
-                if (parcaData.parcalar && parcaData.parcalar.length > 0) {
-                    tempParcaListesi = parcaData.parcalar;
+                if (parcalar && parcalar.length > 0) {
+                    tempParcaListesi = parcalar;
                     
                     // Loading kaldır
                     document.body.removeChild(loadingDiv);
@@ -2057,7 +2160,7 @@
             } catch (error) {
                 console.error('Parça listesi okuma hatası:', error);
                 document.body.removeChild(loadingDiv);
-                alert('❌ Parça listesi okunamadı! Lütfen net bir fotoğraf yükleyin veya manuel olarak ekleyin.\n\nHata: ' + error.message);
+                alert('❌ Parça listesi okunamadı! Lütfen net bir fotoğraf yükleyin veya manuel olarak ekleyin.\n\n💡 İPUCU: Yazılı parça listelerinde daha iyi sonuç alırsınız. El yazısı zor okunabilir.');
             }
             
             // Input'u temizle
