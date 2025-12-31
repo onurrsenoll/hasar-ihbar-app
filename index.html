@@ -1986,16 +1986,6 @@
             // Input'u temizle
             event.target.value = '';
         }
-                
-            } catch (error) {
-                console.error('Ruhsat okuma hatası:', error);
-                document.body.removeChild(loadingDiv);
-                alert('❌ Ruhsat okunamadı! Lütfen net bir fotoğraf yükleyin veya manuel olarak girin.');
-            }
-            
-            // Input'u temizle
-            event.target.value = '';
-        }
         
         // PARÇA LİSTESİ YÜKLEME
         async function handleParcaListesiUpload(event) {
