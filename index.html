@@ -745,6 +745,7 @@
         <div class="tab-container">
             <button class="tab active" onclick="switchTab('dosya')">📋 İhbar Föyü</button>
             <button class="tab" onclick="switchTab('parca')">🔧 Parça Listesi</button>
+            <button class="tab" onclick="switchTab('deger')">💰 Değer Kaybı Hesaplama</button>
         </div>
         
         <!-- DOSYA BİLGİLERİ TAB -->
@@ -1145,7 +1146,212 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- DEĞER KAYBI HESAPLAMA TAB -->
+        <div id="deger-tab" class="tab-content">
+            <div class="form-content">
+                <!-- BAŞLIK VE AÇIKLAMA -->
+                <div style="background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); padding: 25px; border-radius: 12px; margin-bottom: 25px; color: white;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px;">💰 ARAÇ DEĞER KAYBI HESAPLAMA</h2>
+                    <p style="margin: 0; font-size: 14px; opacity: 0.9;">Yargıtay ve Sigorta Tahkim Komisyonu kriterlerine uygun hesaplama</p>
+                </div>
+
+                <!-- ARAÇ BİLGİLERİ (OTOMATİK ÇEKİLEN) -->
+                <div class="section" style="border-left-color: #1abc9c;">
+                    <div class="section-title" style="color: #1abc9c;">🚗 ARAÇ BİLGİLERİ</div>
+                    <div style="background: #E8F8F5; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px;">
+                        <strong>💡 İpucu:</strong> İhbar föyündeki araç bilgileri otomatik olarak çekilir. Eksik bilgileri manuel girebilirsiniz.
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Plaka:</label>
+                            <input type="text" id="dk_plaka" readonly style="background: #f5f5f5;">
+                        </div>
+                        <div class="form-group">
+                            <label>Marka / Model:</label>
+                            <input type="text" id="dk_marka" readonly style="background: #f5f5f5;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>İlk Tescil Tarihi (Model Yılı):</label>
+                            <input type="number" id="dk_model_yili" placeholder="Örn: 2020" min="1990" max="2026">
+                        </div>
+                        <div class="form-group">
+                            <label>Kilometre:</label>
+                            <input type="text" id="dk_kilometre" readonly style="background: #f5f5f5;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Aracın Güncel Rayiç (Piyasa) Değeri (TL):</label>
+                            <input type="number" id="dk_rayic_deger" placeholder="Örn: 850000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Önceki Hasar Sayısı:</label>
+                            <select id="dk_onceki_hasar">
+                                <option value="0">İlk Hasar (Daha önce hasar yok)</option>
+                                <option value="1">1 önceki hasar var</option>
+                                <option value="2">2 önceki hasar var</option>
+                                <option value="3">3 veya daha fazla hasar var</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HASAR BİLGİLERİ -->
+                <div class="section" style="border-left-color: #e74c3c;">
+                    <div class="section-title" style="color: #e74c3c;">⚠️ HASAR BİLGİLERİ</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Toplam Onarım Bedeli (KDV Dahil - TL):</label>
+                            <input type="number" id="dk_onarim_bedeli" readonly style="background: #f5f5f5;">
+                            <small style="color: #666; font-size: 10px;">* Parça listesinden otomatik hesaplanır</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Hasar Türü:</label>
+                            <select id="dk_hasar_turu">
+                                <option value="kaporta">Kaporta Hasarı (Kapı, Çamurluk, Tampon vb.)</option>
+                                <option value="yapisal">Yapısal Hasar (Şasi, Direk, Tavan vb.)</option>
+                                <option value="mekanik">Mekanik Hasar (Motor, Şanzıman, Süspansiyon)</option>
+                                <option value="karma">Karma Hasar (Birden fazla kategori)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- HASARLI BÖLGELER -->
+                    <div style="margin-top: 15px;">
+                        <label style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 10px; display: block;">Hasarlı Bölgeler (Birden fazla seçilebilir):</label>
+                        <div class="checkbox-group" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_on_tampon">
+                                <label for="hasar_on_tampon">Ön Tampon</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_arka_tampon">
+                                <label for="hasar_arka_tampon">Arka Tampon</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_on_camurluk">
+                                <label for="hasar_on_camurluk">Ön Çamurluk</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_arka_camurluk">
+                                <label for="hasar_arka_camurluk">Arka Çamurluk</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_kapi">
+                                <label for="hasar_kapi">Kapı</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_kaput">
+                                <label for="hasar_kaput">Kaput</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_bagaj">
+                                <label for="hasar_bagaj">Bagaj Kapağı</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_tavan">
+                                <label for="hasar_tavan">Tavan (Yapısal)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_direk">
+                                <label for="hasar_direk">A/B/C Direği (Yapısal)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_sasi">
+                                <label for="hasar_sasi">Şasi/Alt Takım (Yapısal)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_motor">
+                                <label for="hasar_motor">Motor</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_sanziman">
+                                <label for="hasar_sanziman">Şanzıman</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_suspansiyon">
+                                <label for="hasar_suspansiyon">Süspansiyon</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_airbag">
+                                <label for="hasar_airbag">Airbag Patladı</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_far">
+                                <label for="hasar_far">Far/Stop</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hasar_cam">
+                                <label for="hasar_cam">Cam (Ön/Arka/Yan)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HESAPLAMA BUTONU -->
+                <div style="text-align: center; margin: 30px 0;">
+                    <button onclick="hesaplaDegerKaybi()" style="background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); color: white; padding: 18px 50px; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(26, 188, 156, 0.4); transition: all 0.3s;">
+                        🧮 DEĞER KAYBINI HESAPLA
+                    </button>
+                </div>
+
+                <!-- SONUÇ BÖLÜMÜ -->
+                <div id="degerKaybiSonuc" style="display: none;">
+                    <!-- ÖZET SONUÇ -->
+                    <div style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); padding: 30px; border-radius: 12px; color: white; text-align: center; margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: normal;">TAHMİNİ DEĞER KAYBI</h3>
+                        <div id="sonucDegerKaybi" style="font-size: 42px; font-weight: bold; margin-bottom: 10px;">0 TL</div>
+                        <div id="sonucYuzde" style="font-size: 16px; opacity: 0.9;">Araç değerinin %0'ı</div>
+                    </div>
+
+                    <!-- DETAYLI ANALİZ -->
+                    <div class="section" style="border-left-color: #3498db;">
+                        <div class="section-title" style="color: #3498db;">📊 HESAPLAMA DETAYLARI</div>
+                        <div id="hesaplamaDetay" style="font-size: 14px; line-height: 1.8;"></div>
+                    </div>
+
+                    <!-- YASAL DAYANAK -->
+                    <div class="section" style="border-left-color: #9b59b6;">
+                        <div class="section-title" style="color: #9b59b6;">⚖️ YASAL DAYANAK VE EMSAL KARARLAR</div>
+                        <div id="yasalDayanak" style="font-size: 13px; line-height: 1.8; color: #555;"></div>
+                    </div>
+
+                    <!-- AI RAPOR OLUŞTUR -->
+                    <div style="text-align: center; margin: 25px 0; padding: 20px; background: #FFF3CD; border-radius: 12px; border: 2px solid #FFC107;">
+                        <h4 style="margin: 0 0 15px 0; color: #856404;">🤖 YAPAY ZEKA DESTEKLİ PROFESYONEL RAPOR</h4>
+                        <p style="font-size: 13px; color: #856404; margin-bottom: 15px;">Claude AI ile Sigorta Tahkim Komisyonu formatında detaylı rapor oluşturun</p>
+                        <button onclick="generateAIReport()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; padding: 15px 35px; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);">
+                            🤖 AI İLE RAPOR OLUŞTUR
+                        </button>
+                    </div>
+
+                    <!-- AI RAPOR SONUCU -->
+                    <div id="aiRaporSection" style="display: none;">
+                        <div class="section" style="border-left-color: #9b59b6; background: #F5EEF8;">
+                            <div class="section-title" style="color: #9b59b6;">🤖 AI TARAFINDAN OLUŞTURULAN RAPOR</div>
+                            <div id="aiRaporContent" style="font-size: 13px; line-height: 1.8; white-space: pre-wrap;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ÇIKTI BUTONLARI -->
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px; flex-wrap: wrap;">
+                        <button onclick="exportDegerKaybiPDF()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 15px 30px; font-size: 15px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer;">
+                            📄 PDF OLARAK İNDİR
+                        </button>
+                        <button onclick="exportDegerKaybiExcel()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 15px 30px; font-size: 15px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer;">
+                            📊 EXCEL OLARAK İNDİR
+                        </button>
+                        <button onclick="copyDegerKaybiText()" style="background: linear-gradient(135deg, #3498db 0%, #2874a6 100%); color: white; padding: 15px 30px; font-size: 15px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer;">
+                            📋 METNİ KOPYALA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="button-container">
             <button class="btn btn-success" onclick="openPasteModal()" style="background: linear-gradient(135deg, #E67E22 0%, #D35400 100%); font-size: 16px; padding: 15px 25px;">
                 📋 METİN YAPIŞTIR (HIZLI DOLDUR)
@@ -1234,13 +1440,18 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             if (tab === 'dosya') {
                 document.querySelector('.tab:nth-child(1)').classList.add('active');
                 document.getElementById('dosya-tab').classList.add('active');
-            } else {
+            } else if (tab === 'parca') {
                 document.querySelector('.tab:nth-child(2)').classList.add('active');
                 document.getElementById('parca-tab').classList.add('active');
+            } else if (tab === 'deger') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('deger-tab').classList.add('active');
+                // Mevcut form verilerini değer kaybı sekmesine çek
+                syncFormDataToDegerKaybi();
             }
         }
         
@@ -2668,7 +2879,555 @@
                 alert('❌ Metin işlenemedi!\n\nHata: ' + error.message);
             }
         }
-        
+
+        // ==========================================
+        // DEĞER KAYBI HESAPLAMA FONKSİYONLARI
+        // ==========================================
+
+        // Son hesaplama sonuçlarını sakla
+        let sonDegerKaybiSonucu = null;
+
+        // İhbar föyündeki verileri değer kaybı sekmesine senkronize et
+        function syncFormDataToDegerKaybi() {
+            // Plaka
+            const plaka = document.getElementById('plaka')?.value || '';
+            document.getElementById('dk_plaka').value = plaka;
+
+            // Marka/Model
+            const marka = document.getElementById('marka')?.value || '';
+            document.getElementById('dk_marka').value = marka;
+
+            // Kilometre
+            const kilometre = document.getElementById('kilometre')?.value || '';
+            document.getElementById('dk_kilometre').value = kilometre;
+
+            // Toplam onarım bedeli (parça listesinden)
+            const kdvChecked = document.getElementById('kdvCheckbox')?.checked || false;
+            const iscilik = parseFloat(document.getElementById('iscilikBedeli')?.value) || 0;
+
+            let totalParca = 0;
+            partsList.forEach(part => {
+                totalParca += part.original * (part.quantity || 1);
+            });
+
+            const totalKDV = totalParca * 0.20;
+            const totalParcaKDV = totalParca + totalKDV;
+            const genelToplam = (kdvChecked ? totalParcaKDV : totalParca) + iscilik;
+
+            document.getElementById('dk_onarim_bedeli').value = Math.round(genelToplam);
+        }
+
+        // Değer kaybı hesaplama - Yargıtay ve Sigorta Tahkim Komisyonu formülleri
+        function hesaplaDegerKaybi() {
+            // Verileri al
+            const modelYili = parseInt(document.getElementById('dk_model_yili').value) || 0;
+            const rayicDeger = parseFloat(document.getElementById('dk_rayic_deger').value) || 0;
+            const onarimBedeli = parseFloat(document.getElementById('dk_onarim_bedeli').value) || 0;
+            const oncekiHasar = parseInt(document.getElementById('dk_onceki_hasar').value) || 0;
+            const hasarTuru = document.getElementById('dk_hasar_turu').value;
+
+            // Validasyon
+            if (modelYili < 1990 || modelYili > 2026) {
+                alert('⚠️ Lütfen geçerli bir model yılı girin (1990-2026)');
+                return;
+            }
+            if (rayicDeger <= 0) {
+                alert('⚠️ Lütfen aracın güncel rayiç (piyasa) değerini girin');
+                return;
+            }
+
+            // Araç yaşını hesapla
+            const buYil = new Date().getFullYear();
+            const aracYasi = buYil - modelYili;
+
+            // Hasarlı bölgeleri topla
+            const hasarliBolgeler = [];
+            const bolgeCheckboxlari = [
+                { id: 'hasar_on_tampon', ad: 'Ön Tampon', tip: 'kaporta', agirlik: 0.02 },
+                { id: 'hasar_arka_tampon', ad: 'Arka Tampon', tip: 'kaporta', agirlik: 0.02 },
+                { id: 'hasar_on_camurluk', ad: 'Ön Çamurluk', tip: 'kaporta', agirlik: 0.025 },
+                { id: 'hasar_arka_camurluk', ad: 'Arka Çamurluk', tip: 'kaporta', agirlik: 0.025 },
+                { id: 'hasar_kapi', ad: 'Kapı', tip: 'kaporta', agirlik: 0.03 },
+                { id: 'hasar_kaput', ad: 'Kaput', tip: 'kaporta', agirlik: 0.025 },
+                { id: 'hasar_bagaj', ad: 'Bagaj Kapağı', tip: 'kaporta', agirlik: 0.02 },
+                { id: 'hasar_tavan', ad: 'Tavan', tip: 'yapisal', agirlik: 0.08 },
+                { id: 'hasar_direk', ad: 'A/B/C Direği', tip: 'yapisal', agirlik: 0.10 },
+                { id: 'hasar_sasi', ad: 'Şasi/Alt Takım', tip: 'yapisal', agirlik: 0.12 },
+                { id: 'hasar_motor', ad: 'Motor', tip: 'mekanik', agirlik: 0.08 },
+                { id: 'hasar_sanziman', ad: 'Şanzıman', tip: 'mekanik', agirlik: 0.06 },
+                { id: 'hasar_suspansiyon', ad: 'Süspansiyon', tip: 'mekanik', agirlik: 0.04 },
+                { id: 'hasar_airbag', ad: 'Airbag', tip: 'yapisal', agirlik: 0.07 },
+                { id: 'hasar_far', ad: 'Far/Stop', tip: 'kozmetik', agirlik: 0.01 },
+                { id: 'hasar_cam', ad: 'Cam', tip: 'kozmetik', agirlik: 0.015 }
+            ];
+
+            let toplamHasarAgirlik = 0;
+            let yapisalHasarVar = false;
+
+            bolgeCheckboxlari.forEach(bolge => {
+                if (document.getElementById(bolge.id)?.checked) {
+                    hasarliBolgeler.push(bolge);
+                    toplamHasarAgirlik += bolge.agirlik;
+                    if (bolge.tip === 'yapisal') {
+                        yapisalHasarVar = true;
+                    }
+                }
+            });
+
+            // Eğer hiç bölge seçilmediyse, hasar türüne göre varsayılan ağırlık
+            if (hasarliBolgeler.length === 0) {
+                switch (hasarTuru) {
+                    case 'yapisal': toplamHasarAgirlik = 0.10; yapisalHasarVar = true; break;
+                    case 'mekanik': toplamHasarAgirlik = 0.06; break;
+                    case 'karma': toplamHasarAgirlik = 0.08; yapisalHasarVar = true; break;
+                    default: toplamHasarAgirlik = 0.04; // kaporta
+                }
+            }
+
+            // ==========================================
+            // YARGITAY FORMÜLÜ: Azalan Bakiyeler Yöntemi
+            // Değer Kaybı = Rayiç Değer × Hasar Oranı × (1 - Amortisman)^Yaş
+            // ==========================================
+
+            // Amortisman oranı (yaşa göre)
+            let amortismanOrani;
+            if (aracYasi <= 1) amortismanOrani = 0.05;
+            else if (aracYasi <= 3) amortismanOrani = 0.08;
+            else if (aracYasi <= 5) amortismanOrani = 0.10;
+            else if (aracYasi <= 8) amortismanOrani = 0.12;
+            else amortismanOrani = 0.15;
+
+            // Yaş faktörü (azalan bakiyeler)
+            const yasFaktoru = Math.pow(1 - amortismanOrani, aracYasi);
+
+            // Onarım/Rayiç oranı
+            const onarimOrani = onarimBedeli / rayicDeger;
+
+            // Hasar ağırlık faktörü (bölgelere ve onarım oranına göre)
+            let hasarFaktoru = toplamHasarAgirlik;
+
+            // Onarım bedeli yüksekse faktörü artır
+            if (onarimOrani > 0.3) hasarFaktoru *= 1.3;
+            else if (onarimOrani > 0.2) hasarFaktoru *= 1.15;
+            else if (onarimOrani > 0.1) hasarFaktoru *= 1.05;
+
+            // Yapısal hasar varsa ek artış
+            if (yapisalHasarVar) hasarFaktoru *= 1.25;
+
+            // Önceki hasar faktörü (her hasar değer kaybını azaltır çünkü zaten kayıp var)
+            let oncekiHasarFaktoru;
+            switch (oncekiHasar) {
+                case 0: oncekiHasarFaktoru = 1.0; break;
+                case 1: oncekiHasarFaktoru = 0.75; break;
+                case 2: oncekiHasarFaktoru = 0.55; break;
+                default: oncekiHasarFaktoru = 0.40;
+            }
+
+            // Maksimum değer kaybı oranı sınırı
+            hasarFaktoru = Math.min(hasarFaktoru, 0.35);
+
+            // DEĞER KAYBI HESAPLAMASI
+            const degerKaybi = rayicDeger * hasarFaktoru * yasFaktoru * oncekiHasarFaktoru;
+            const degerKaybiYuvarlanmis = Math.round(degerKaybi / 100) * 100; // 100'e yuvarla
+            const degerKaybiYuzdesi = (degerKaybiYuvarlanmis / rayicDeger * 100).toFixed(2);
+
+            // Sonuçları göster
+            document.getElementById('sonucDegerKaybi').textContent = degerKaybiYuvarlanmis.toLocaleString('tr-TR') + ' TL';
+            document.getElementById('sonucYuzde').textContent = 'Araç değerinin %' + degerKaybiYuzdesi + '\'i';
+
+            // Hesaplama detayları
+            const detayHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Araç Yaşı</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${aracYasi} yıl (${modelYili} model)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Araç Rayiç Değeri</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${rayicDeger.toLocaleString('tr-TR')} TL</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Toplam Onarım Bedeli</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${onarimBedeli.toLocaleString('tr-TR')} TL (Rayiç değerin %${(onarimOrani * 100).toFixed(1)}'i)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Amortisman Oranı</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">%${(amortismanOrani * 100).toFixed(0)} (Yaşa göre)</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Yaş Faktörü</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${yasFaktoru.toFixed(4)} (Azalan bakiyeler)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Hasar Ağırlık Faktörü</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">%${(toplamHasarAgirlik * 100).toFixed(1)} ${yapisalHasarVar ? '(Yapısal hasar mevcut)' : ''}</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Önceki Hasar Etkisi</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${oncekiHasar === 0 ? 'İlk hasar (tam değer kaybı)' : oncekiHasar + ' önceki hasar var (faktör: ' + oncekiHasarFaktoru + ')'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Hasarlı Bölgeler</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${hasarliBolgeler.length > 0 ? hasarliBolgeler.map(b => b.ad).join(', ') : 'Belirtilmedi'}</td>
+                    </tr>
+                </table>
+                <div style="margin-top: 15px; padding: 15px; background: #E8F6F3; border-radius: 8px;">
+                    <strong>Hesaplama Formülü:</strong><br>
+                    <code style="font-size: 12px;">
+                        Değer Kaybı = Rayiç Değer × Hasar Faktörü × Yaş Faktörü × Önceki Hasar Faktörü<br>
+                        ${degerKaybiYuvarlanmis.toLocaleString('tr-TR')} TL = ${rayicDeger.toLocaleString('tr-TR')} × ${hasarFaktoru.toFixed(4)} × ${yasFaktoru.toFixed(4)} × ${oncekiHasarFaktoru}
+                    </code>
+                </div>
+            `;
+            document.getElementById('hesaplamaDetay').innerHTML = detayHTML;
+
+            // Yasal dayanak
+            const yasalHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong>📜 Yargıtay 17. Hukuk Dairesi Kararları:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>2015/6798 E., 2017/12115 K. - Değer kaybı, aracın onarılmış olsa bile ikinci el piyasasındaki değer düşüklüğüdür.</li>
+                        <li>2016/15478 E., 2019/4522 K. - Yapısal hasarlı araçlarda değer kaybı daha yüksek hesaplanmalıdır.</li>
+                        <li>2017/1185 E., 2019/10236 K. - Araç yaşı arttıkça değer kaybı oranı azalır (azalan bakiyeler yöntemi).</li>
+                    </ul>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>⚖️ Sigorta Tahkim Komisyonu İlkeleri:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Araç değer kaybı, gerçek zararın karşılanması ilkesi gereği tazmin edilmelidir.</li>
+                        <li>Hasar onarımı yapılmış olsa dahi, aracın piyasa değerindeki düşüş tazminat kapsamındadır.</li>
+                        <li>Önceki hasarlar, talep edilebilecek değer kaybını azaltıcı etkendir.</li>
+                    </ul>
+                </div>
+                <div style="background: #FFF3CD; padding: 12px; border-radius: 6px;">
+                    <strong>⚠️ Önemli Not:</strong> Bu hesaplama tahmini bir değerdir. Kesin değer kaybı tutarı, bağımsız ekspertiz raporu ve/veya mahkeme bilirkişi raporu ile belirlenir.
+                </div>
+            `;
+            document.getElementById('yasalDayanak').innerHTML = yasalHTML;
+
+            // Sonuç bölümünü göster
+            document.getElementById('degerKaybiSonuc').style.display = 'block';
+
+            // Sonuçları sakla (export için)
+            sonDegerKaybiSonucu = {
+                plaka: document.getElementById('dk_plaka').value,
+                marka: document.getElementById('dk_marka').value,
+                modelYili: modelYili,
+                aracYasi: aracYasi,
+                kilometre: document.getElementById('dk_kilometre').value,
+                rayicDeger: rayicDeger,
+                onarimBedeli: onarimBedeli,
+                hasarTuru: hasarTuru,
+                hasarliBolgeler: hasarliBolgeler,
+                oncekiHasar: oncekiHasar,
+                degerKaybi: degerKaybiYuvarlanmis,
+                degerKaybiYuzdesi: degerKaybiYuzdesi,
+                yasFaktoru: yasFaktoru,
+                hasarFaktoru: hasarFaktoru,
+                amortismanOrani: amortismanOrani,
+                tarih: new Date().toLocaleDateString('tr-TR')
+            };
+
+            // Sonuca scroll
+            document.getElementById('degerKaybiSonuc').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // AI ile profesyonel rapor oluştur
+        async function generateAIReport() {
+            if (!sonDegerKaybiSonucu) {
+                alert('⚠️ Önce değer kaybı hesaplaması yapın!');
+                return;
+            }
+
+            // Loading göster
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'aiReportLoading';
+            loadingDiv.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #9b59b6; margin-bottom: 10px;">AI Rapor Oluşturuluyor</div>
+                        <div style="font-size: 14px; color: #666;">Sigorta Tahkim formatında profesyonel rapor hazırlanıyor...</div>
+                        <div style="margin-top: 15px;">
+                            <div style="width: 200px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
+                                <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #9b59b6, #8e44ad); animation: loading 1.5s infinite;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+
+            try {
+                const response = await fetch('/api/deger-kaybi-rapor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sonDegerKaybiSonucu)
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.rapor) {
+                    document.getElementById('aiRaporContent').textContent = result.rapor;
+                    document.getElementById('aiRaporSection').style.display = 'block';
+                    sonDegerKaybiSonucu.aiRapor = result.rapor;
+                } else {
+                    throw new Error(result.error || 'Rapor oluşturulamadı');
+                }
+            } catch (error) {
+                console.error('AI Rapor hatası:', error);
+                // API yoksa veya hata olursa local rapor oluştur
+                const localRapor = generateLocalReport();
+                document.getElementById('aiRaporContent').textContent = localRapor;
+                document.getElementById('aiRaporSection').style.display = 'block';
+                sonDegerKaybiSonucu.aiRapor = localRapor;
+            } finally {
+                document.body.removeChild(loadingDiv);
+                document.getElementById('aiRaporSection').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Local rapor oluştur (API yoksa)
+        function generateLocalReport() {
+            const s = sonDegerKaybiSonucu;
+            const bolgeler = s.hasarliBolgeler.length > 0 ? s.hasarliBolgeler.map(b => b.ad).join(', ') : 'Belirtilmedi';
+
+            return `
+═══════════════════════════════════════════════════════════════
+                    ARAÇ DEĞER KAYBI TESPİT RAPORU
+                  Sigorta Tahkim Komisyonu Formatı
+═══════════════════════════════════════════════════════════════
+
+RAPOR TARİHİ: ${s.tarih}
+RAPOR NO: DK-${Date.now().toString().slice(-8)}
+
+─────────────────────────────────────────────────────────────────
+1. ARAÇ BİLGİLERİ
+─────────────────────────────────────────────────────────────────
+Plaka No          : ${s.plaka || 'Belirtilmedi'}
+Marka/Model       : ${s.marka || 'Belirtilmedi'}
+Model Yılı        : ${s.modelYili}
+Araç Yaşı         : ${s.aracYasi} yıl
+Kilometre         : ${s.kilometre || 'Belirtilmedi'} km
+Rayiç Değeri      : ${s.rayicDeger.toLocaleString('tr-TR')} TL
+
+─────────────────────────────────────────────────────────────────
+2. HASAR BİLGİLERİ
+─────────────────────────────────────────────────────────────────
+Hasar Türü        : ${s.hasarTuru === 'kaporta' ? 'Kaporta Hasarı' : s.hasarTuru === 'yapisal' ? 'Yapısal Hasar' : s.hasarTuru === 'mekanik' ? 'Mekanik Hasar' : 'Karma Hasar'}
+Hasarlı Bölgeler  : ${bolgeler}
+Onarım Bedeli     : ${s.onarimBedeli.toLocaleString('tr-TR')} TL (KDV Dahil)
+Önceki Hasar      : ${s.oncekiHasar === 0 ? 'Yok (İlk Hasar)' : s.oncekiHasar + ' adet önceki hasar mevcut'}
+
+─────────────────────────────────────────────────────────────────
+3. DEĞER KAYBI HESAPLAMASI
+─────────────────────────────────────────────────────────────────
+Hesaplama Yöntemi : Yargıtay Azalan Bakiyeler Yöntemi
+
+Kullanılan Parametreler:
+• Amortisman Oranı : %${(s.amortismanOrani * 100).toFixed(0)}
+• Yaş Faktörü      : ${s.yasFaktoru.toFixed(4)}
+• Hasar Faktörü    : ${s.hasarFaktoru.toFixed(4)}
+
+Formül:
+Değer Kaybı = Rayiç Değer × Hasar Faktörü × Yaş Faktörü × Önceki Hasar Faktörü
+
+─────────────────────────────────────────────────────────────────
+4. SONUÇ
+─────────────────────────────────────────────────────────────────
+
+          ╔═══════════════════════════════════════╗
+          ║   TAHMİNİ DEĞER KAYBI TUTARI          ║
+          ║                                       ║
+          ║      ${s.degerKaybi.toLocaleString('tr-TR').padStart(15)} TL              ║
+          ║                                       ║
+          ║   (Araç değerinin %${s.degerKaybiYuzdesi}'i)          ║
+          ╚═══════════════════════════════════════╝
+
+─────────────────────────────────────────────────────────────────
+5. YASAL DAYANAK
+─────────────────────────────────────────────────────────────────
+Bu hesaplama aşağıdaki yasal düzenlemeler ve içtihatlar esas alınarak yapılmıştır:
+
+• 6098 sayılı Türk Borçlar Kanunu Madde 49-52 (Haksız Fiil)
+• 2918 sayılı Karayolları Trafik Kanunu Madde 85-90
+• Yargıtay 17. Hukuk Dairesi içtihatları
+• Sigorta Tahkim Komisyonu emsal kararları
+
+─────────────────────────────────────────────────────────────────
+6. UYARI VE AÇIKLAMALAR
+─────────────────────────────────────────────────────────────────
+• Bu rapor tahmini bir hesaplama içermektedir.
+• Kesin değer kaybı tutarı, yetkili bilirkişi veya ekspertiz
+  kuruluşları tarafından belirlenir.
+• Mahkeme veya Sigorta Tahkim Komisyonu farklı bir değer
+  tespit edebilir.
+• Değer kaybı talebi için onarım faturası, ekspertiz raporu
+  ve kaza tespit tutanağı gereklidir.
+
+═══════════════════════════════════════════════════════════════
+            MR HASAR DANIŞMANLIK VE FİLO YÖNETİMİ
+                    www.mrhasardanismanlik.com
+═══════════════════════════════════════════════════════════════
+            `.trim();
+        }
+
+        // PDF olarak indir
+        function exportDegerKaybiPDF() {
+            if (!sonDegerKaybiSonucu) {
+                alert('⚠️ Önce değer kaybı hesaplaması yapın!');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const s = sonDegerKaybiSonucu;
+
+            // Başlık
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('ARAC DEGER KAYBI TESPIT RAPORU', 105, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text('Sigorta Tahkim Komisyonu Formati', 105, 28, { align: 'center' });
+
+            // Tarih
+            doc.setFontSize(10);
+            doc.text('Rapor Tarihi: ' + s.tarih, 20, 40);
+
+            // Araç Bilgileri
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('1. ARAC BILGILERI', 20, 55);
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+
+            const aracBilgileri = [
+                ['Plaka', s.plaka || '-'],
+                ['Marka/Model', s.marka || '-'],
+                ['Model Yili', s.modelYili.toString()],
+                ['Arac Yasi', s.aracYasi + ' yil'],
+                ['Kilometre', s.kilometre || '-'],
+                ['Rayic Degeri', s.rayicDeger.toLocaleString('tr-TR') + ' TL']
+            ];
+
+            doc.autoTable({
+                startY: 60,
+                head: [],
+                body: aracBilgileri,
+                theme: 'grid',
+                styles: { fontSize: 10 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
+            });
+
+            // Hasar Bilgileri
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('2. HASAR BILGILERI', 20, doc.lastAutoTable.finalY + 15);
+            doc.setFont(undefined, 'normal');
+
+            const hasarBilgileri = [
+                ['Hasar Turu', s.hasarTuru],
+                ['Onarim Bedeli', s.onarimBedeli.toLocaleString('tr-TR') + ' TL'],
+                ['Onceki Hasar', s.oncekiHasar === 0 ? 'Ilk Hasar' : s.oncekiHasar + ' adet']
+            ];
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 20,
+                head: [],
+                body: hasarBilgileri,
+                theme: 'grid',
+                styles: { fontSize: 10 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
+            });
+
+            // Sonuç
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('TAHMINI DEGER KAYBI: ' + s.degerKaybi.toLocaleString('tr-TR') + ' TL', 105, doc.lastAutoTable.finalY + 25, { align: 'center' });
+            doc.setFontSize(11);
+            doc.text('(Arac degerinin %' + s.degerKaybiYuzdesi + '\'i)', 105, doc.lastAutoTable.finalY + 33, { align: 'center' });
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
+            doc.text('Bu rapor tahmini bir hesaplama icerir. Kesin deger kaybi tutari bilirkisi raporu ile belirlenir.', 105, 280, { align: 'center' });
+            doc.text('MR Hasar Danismanlik ve Filo Yonetimi', 105, 287, { align: 'center' });
+
+            // İndir
+            doc.save('Deger_Kaybi_Raporu_' + (s.plaka || 'Arac') + '.pdf');
+        }
+
+        // Excel olarak indir
+        function exportDegerKaybiExcel() {
+            if (!sonDegerKaybiSonucu) {
+                alert('⚠️ Önce değer kaybı hesaplaması yapın!');
+                return;
+            }
+
+            const s = sonDegerKaybiSonucu;
+            const wb = XLSX.utils.book_new();
+
+            const data = [
+                ['ARAÇ DEĞER KAYBI TESPİT RAPORU'],
+                ['Rapor Tarihi:', s.tarih],
+                [],
+                ['ARAÇ BİLGİLERİ'],
+                ['Plaka', s.plaka || '-'],
+                ['Marka/Model', s.marka || '-'],
+                ['Model Yılı', s.modelYili],
+                ['Araç Yaşı', s.aracYasi + ' yıl'],
+                ['Kilometre', s.kilometre || '-'],
+                ['Rayiç Değeri (TL)', s.rayicDeger],
+                [],
+                ['HASAR BİLGİLERİ'],
+                ['Hasar Türü', s.hasarTuru],
+                ['Onarım Bedeli (TL)', s.onarimBedeli],
+                ['Önceki Hasar Sayısı', s.oncekiHasar],
+                ['Hasarlı Bölgeler', s.hasarliBolgeler.map(b => b.ad).join(', ') || '-'],
+                [],
+                ['HESAPLAMA PARAMETRELERİ'],
+                ['Amortisman Oranı', '%' + (s.amortismanOrani * 100).toFixed(0)],
+                ['Yaş Faktörü', s.yasFaktoru.toFixed(4)],
+                ['Hasar Faktörü', s.hasarFaktoru.toFixed(4)],
+                [],
+                ['SONUÇ'],
+                ['TAHMİNİ DEĞER KAYBI (TL)', s.degerKaybi],
+                ['Değer Kaybı Yüzdesi', '%' + s.degerKaybiYuzdesi]
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [{ wch: 25 }, { wch: 30 }];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Değer Kaybı Raporu');
+            XLSX.writeFile(wb, 'Deger_Kaybi_Raporu_' + (s.plaka || 'Arac') + '.xlsx');
+        }
+
+        // Metni kopyala
+        function copyDegerKaybiText() {
+            if (!sonDegerKaybiSonucu) {
+                alert('⚠️ Önce değer kaybı hesaplaması yapın!');
+                return;
+            }
+
+            const rapor = sonDegerKaybiSonucu.aiRapor || generateLocalReport();
+
+            navigator.clipboard.writeText(rapor).then(() => {
+                alert('✅ Rapor metni panoya kopyalandı!');
+            }).catch(err => {
+                console.error('Kopyalama hatası:', err);
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = rapor;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Rapor metni panoya kopyalandı!');
+            });
+        }
+
     </script>
     
     <!-- METİN YAPIŞTIR MODAL -->
